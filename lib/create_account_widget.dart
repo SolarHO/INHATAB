@@ -326,7 +326,7 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget>
                                             ],
                                             obscureText: false,
                                             decoration: InputDecoration(
-                                              labelText: 'ID',
+                                              labelText: 'E-mail',
                                               labelStyle:
                                               FlutterFlowTheme.of(context)
                                                   .labelLarge
@@ -410,7 +410,7 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget>
                                             obscureText:
                                             !_model.passwordVisibility,
                                             decoration: InputDecoration(
-                                              labelText: 'Password',
+                                              labelText: '비밀번호',
                                               labelStyle:
                                               FlutterFlowTheme.of(context)
                                                   .labelLarge
@@ -514,7 +514,7 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget>
                                             obscureText:
                                             !_model.passwordcheckVisibility,
                                             decoration: InputDecoration(
-                                              labelText: 'Password check',
+                                              labelText: '비밀번호 확인',
                                               labelStyle:
                                               FlutterFlowTheme.of(context)
                                                   .labelLarge

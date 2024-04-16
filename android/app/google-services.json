@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "1063900529601",
+    "firebase_url": "https://tcinhide-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "tcinhide",
+    "storage_bucket": "tcinhide.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1063900529601:android:d18903608c7dfec1d9e540",
+        "android_client_info": {
+          "package_name": "com.example.flutter_tcinhide"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_yPy2N5zV-_EY59UDdlLG6Gc4dzCz18Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1063900529601:android:3f3f58ae294b1e7ed9e540",
+        "android_client_info": {
+          "package_name": "com.example.sample"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_yPy2N5zV-_EY59UDdlLG6Gc4dzCz18Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

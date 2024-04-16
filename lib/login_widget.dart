@@ -239,7 +239,7 @@ class _LoginWidgetState extends State<LoginWidget>
                                         autofillHints: [AutofillHints.email],
                                         obscureText: false,
                                         decoration: InputDecoration(
-                                          labelText: 'ID',
+                                          labelText: 'E-mail',
                                           labelStyle:
                                           FlutterFlowTheme.of(context)
                                               .labelLarge
@@ -319,7 +319,7 @@ class _LoginWidgetState extends State<LoginWidget>
                                         autofillHints: [AutofillHints.password],
                                         obscureText: !_model.passwordVisibility,
                                         decoration: InputDecoration(
-                                          labelText: 'Password',
+                                          labelText: '비밀번호',
                                           labelStyle:
                                           FlutterFlowTheme.of(context)
                                               .labelLarge
