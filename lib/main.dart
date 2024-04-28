@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:sample/create_account_widget.dart';
+import 'package:INHATAB/create_account_widget.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sample/login_widget.dart';
-import 'package:sample/testpage.dart';
+import 'package:INHATAB/login_widget.dart';
+import 'package:INHATAB/testpage.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:sample/firebase_options.dart';
+import 'package:INHATAB/firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
