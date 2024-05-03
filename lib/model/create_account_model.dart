@@ -1,5 +1,5 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
-import 'create_account_widget.dart' show CreateAccountWidget;
+import '../widget/create_account_widget.dart' show CreateAccountWidget;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';

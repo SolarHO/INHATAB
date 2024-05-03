@@ -1,5 +1,5 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
-import 'login_widget.dart' show LoginWidget;
+import '../widget/login_widget.dart' show LoginWidget;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
