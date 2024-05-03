@@ -5,10 +5,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:INHATAB/navigator/router_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_model.dart';
-export 'login_model.dart';
+import '../model/login_model.dart';
+export '../model/login_model.dart';
 import 'package:firebase_core/firebase_core.dart';
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -79,7 +80,7 @@ class _LoginWidgetState extends State<LoginWidget>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('userId')) {
       // 사용자 정보가 남아있으면 GoRouter를 사용하여 테스트 페이지로 이동
-      GoRouter.of(context).go('/TestPage');
+      GoRouter.of(context).go('HomePage');
     }
   }
 
@@ -104,7 +105,7 @@ class _LoginWidgetState extends State<LoginWidget>
 
 
       // GoRouter를 사용하여 TestPage로 이동
-      GoRouter.of(context).go('/TestPage');
+      GoRouter.of(context).go('HomePage');
     } catch (e) {
       // 인증 실패 시 처리
       showDialog(

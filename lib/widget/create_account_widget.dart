@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'create_account_model.dart';
-export 'create_account_model.dart';
+import '../model/create_account_model.dart';
+export '../model/create_account_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 class CreateAccountWidget extends StatefulWidget {
   const CreateAccountWidget({super.key});
