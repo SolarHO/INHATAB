@@ -11,50 +11,51 @@ import 'package:go_router/go_router.dart';
 
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-final router = GoRouter(initialLocation: '/', routes: [
-  ShellRoute(
+final router = GoRouter(initialLocation: '/login', routes: [
+  ShellRoute( //네비게이션 바 셸 라우터
     navigatorKey: _shellNavigatorKey,
     builder: (context, state, child) =>
         BottomNavigationBarScaffold(child: child),
     routes: [
       GoRoute(
-        path: '/',
+        path: '/', //홈 페이지 라우터
         pageBuilder: (context, state) => const NoTransitionPage(child: HomePageWidget()),
       ),
       GoRoute(
-        path: '/Schedule', // 여기서 수정
+        path: '/Schedule', //시간표 페이지 라우터
         pageBuilder: (context, state) => const NoTransitionPage(
           child: ScheduleWidget(),
         ),
       ),
       GoRoute(
-        path: '/Chat', // 여기서 수정
+        path: '/Chat', //채팅 페이지 라우터
         pageBuilder: (context, state) => const NoTransitionPage(
           child: ChatWidget(),
         ),
       ),
       GoRoute(
-        path: '/Bbs', // 여기서 수정
+        path: '/Bbs', //게시판 페이지 라우터
         pageBuilder: (context, state) => const NoTransitionPage(
           child: BbsWidget(),
         ),
       ),
       GoRoute(
-        path: '/Alert', // 여기서 수정
+        path: '/Alert', //알림 페이지 라우터
         pageBuilder: (context, state) => const NoTransitionPage(
           child: AlertWidget(),
         ),
       ),
-      GoRoute(
-        path: '/login', // 여기서 수정
-        name: 'login',
-        builder: (context, state) => const LoginWidget(),
-      ),
-      GoRoute(
-        path: '/CreateAccount', // 여기서 수정
-        name: 'CreateAccount',
-        builder: (context, state) => const CreateAccountWidget(),
-      ),
-    ],
+    ],  
   ),
+  GoRoute(
+    path: '/login', //로그인 페이지 라우터
+    name: 'login',
+    builder: (context, state) => const LoginWidget(),
+  ),
+  GoRoute(
+    path: '/CreateAccount', //회원가입 페이지 라우터
+    name: 'CreateAccount',
+    builder: (context, state) => const CreateAccountWidget(),
+  ),
+  //라우터 추가시 이 아래에 추가
 ]);

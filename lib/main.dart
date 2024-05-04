@@ -9,8 +9,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      routerConfig: router,
+      debugShowCheckedModeBanner: false, //우측 상단 디버그 배너 삭제
+      routerConfig: router, //라우터 사용
     );
   }
 }

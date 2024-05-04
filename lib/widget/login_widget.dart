@@ -80,7 +80,7 @@ class _LoginWidgetState extends State<LoginWidget>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('userId')) {
       // 사용자 정보가 남아있으면 GoRouter를 사용하여 테스트 페이지로 이동
-      GoRouter.of(context).go('HomePage');
+      GoRouter.of(context).go('/');
     }
   }
 
@@ -105,7 +105,7 @@ class _LoginWidgetState extends State<LoginWidget>
 
 
       // GoRouter를 사용하여 TestPage로 이동
-      GoRouter.of(context).go('HomePage');
+      GoRouter.of(context).go('/');
     } catch (e) {
       // 인증 실패 시 처리
       showDialog(
