@@ -65,6 +65,7 @@ dependencies:
   flutter_bloc: ^8.0.0
   firebase_auth: ^4.2.3
   cupertino_icons: ^1.0.6
+  time_planner: ^0.1.2+1
 
 dev_dependencies:
   flutter_test:

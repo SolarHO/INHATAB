@@ -142,8 +142,8 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget>
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-                title: Text('회원가입 성공'),
-                content: Text('ㅊㅋ..'),
+                title: Text('회원가입 완료'),
+                content: Text('환영합니다!'),
                 actions: <Widget>[
                   TextButton(
                       onPressed: () {

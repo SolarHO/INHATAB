@@ -13,7 +13,34 @@ class BottomNavigationBarScaffold extends StatefulWidget {
 
 class _BottomNavigationBarScaffoldState
     extends State<BottomNavigationBarScaffold> {
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (mounted) {
+      setState(() {
+        selectedIndex = getIndexFromPath(GoRouter.of(context).location);
+      });
+    }
+  }
+
+  int getIndexFromPath(String path) {
+    switch (path) {
+      case '/':
+        return 0;
+      case '/Schedule':
+        return 1;
+      case '/Chat':
+        return 2;
+      case '/Bbs':
+        return 3;
+      case '/Alert':
+        return 4;
+      default:
+        return 0;
+    }
+  }
 
   void onDestinationSelected(int index) {
     setState(() {
