@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:INHATAB/create_account_widget.dart';
+import 'package:INHATAB/widget/create_account_widget.dart';
 import 'package:go_router/go_router.dart';
-import 'package:INHATAB/login_widget.dart';
+import 'package:INHATAB/widget/login_widget.dart';
 import 'package:INHATAB/testpage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:INHATAB/firebase_options.dart';
 import 'package:INHATAB/board.dart';
 import 'package:INHATAB/writeboard.dart';
 import 'package:INHATAB/PostDetail.dart';
+import 'package:INHATAB/navigator/router_config.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -61,12 +62,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Flutter Demo',
+     //title: 'Flutter Demo',
 
-      routeInformationProvider: _router.routeInformationProvider,
-      routerDelegate: _router.routerDelegate, //routeInformationParser에서 변환된 값을 어떤 라우트로 보여줄 지 정하는 함수
-      routeInformationParser: _router.routeInformationParser, //라우트 상태 반환 함수
-
+     // routeInformationProvider: _router.routeInformationProvider,
+     // routerDelegate: _router.routerDelegate, //routeInformationParser에서 변환된 값을 어떤 라우트로 보여줄 지 정하는 함수
+     // routeInformationParser: _router.routeInformationParser, //라우트 상태 반환 함수
+      debugShowCheckedModeBanner: false, //우측 상단 디버그 배너 삭제
+      routerConfig: router, //라우터 사용
     );
   }
 }

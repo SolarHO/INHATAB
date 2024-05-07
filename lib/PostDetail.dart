@@ -1,7 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 class PostDetailPage extends StatelessWidget {
   final String postId;
 
@@ -61,16 +62,18 @@ class PostDetailPage extends StatelessWidget {
   }
 
   Future<Map<String, dynamic>> _fetchPostDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();  //게시판항목값을 세션으로 계속 받아옴 뒤에도 계속 활용함
+    String? selectedBoard = prefs.getString('selectedBoard');
+    if (selectedBoard == null) {
+      throw Exception('게시판을 선택하지 않았습니다.');
+    }
     try {
-      DatabaseReference postRef = FirebaseDatabase.instance
-          .reference()
-          .child('boardinfo')
-          .child(postId)
-          .child('contents'); //내용이 들어간 노드
+      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).child(postId).child('contents');
 
       DatabaseEvent event = await postRef.once();
       DataSnapshot snapshot = event.snapshot;
-      Map<dynamic, dynamic>? postData = snapshot.value as Map<dynamic, dynamic>?;
+      Map<dynamic, dynamic>? postData = snapshot.value as Map<dynamic,
+          dynamic>?;
 
       if (postData != null) {
         return {

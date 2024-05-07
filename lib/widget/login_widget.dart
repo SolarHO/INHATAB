@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_model.dart';
-export 'login_model.dart';
+import 'package:INHATAB/model/login_model.dart';
+export 'package:INHATAB/model/login_model.dart';
 import 'package:firebase_core/firebase_core.dart';
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -79,7 +79,8 @@ class _LoginWidgetState extends State<LoginWidget>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('userId')) {
       // 사용자 정보가 남아있으면 GoRouter를 사용하여 board 페이지로 이동
-      GoRouter.of(context).go('/boardPage');
+      GoRouter.of(context).go('HomePage');
+      GoRouter.of(context).go('/');
     }
   }
 
@@ -106,7 +107,8 @@ class _LoginWidgetState extends State<LoginWidget>
 
 
       // GoRouter를 사용하여 TestPage로 이동
-      GoRouter.of(context).go('/BoardPage');
+      GoRouter.of(context).go('HomePage');
+      GoRouter.of(context).go('/');
     } catch (e) {
       // 인증 실패 시 처리
       showDialog(

@@ -1,9 +1,11 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 class WriteBoardPage extends StatefulWidget {
   const WriteBoardPage({Key? key}) : super(key: key);
 
@@ -27,6 +29,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
       // 현재 로그인된 사용자 가져오기
       User? user = FirebaseAuth.instance.currentUser;
       final String postId = generateRandomId();
+
       // Firebase Realtime Database에서 사용자 정보 가져오기
       DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
       DatabaseEvent event = await userRef.child(user!.uid).once(); // 현재 사용자의 UID에 해당하는 정보 가져오기
@@ -42,14 +45,19 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         // 시간을 원하는 형식의 문자열로 변환
         String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? selectedBoard = prefs.getString('selectedBoard');
+        if (selectedBoard == null) {
+          throw Exception('게시판을 선택하지 않았습니다.');
+        }
+
         // Firebase Realtime Database에 게시글 저장
-        DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').push();
+        DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).push();
+        String postId = postRef.key!; // 새로운 게시글의 키 가져오기
 
-
-        String postId = postRef.key!; // 새로운 게시글의 키 가져오기!
         // 게시글 정보 저장
         await postRef.set({
-          'postId' : postId,
+          'postId': postId,
           'title': _titleController.text, // 게시글 제목
           'uid': user.uid, // 현재 사용자의 UID
           'name': userName, // 사용자의 이름
@@ -57,7 +65,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         });
 
         // 게시글 내용을 별도의 하위 노드로 저장 (contents)
-        DatabaseReference contentRef = FirebaseDatabase.instance.reference().child('boardinfo').child(postId).child('contents');
+        DatabaseReference contentRef = postRef.child('contents');
         await contentRef.set({
           'title': _titleController.text, // 게시글 제목
           'content': _contentController.text, // 게시글 내용
@@ -110,3 +118,4 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
     );
   }
 }
+
