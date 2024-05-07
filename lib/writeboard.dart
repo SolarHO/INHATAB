@@ -46,7 +46,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').push();
 
 
-        String postId = postRef.key!; // 새로운 게시글의 키 가져오기
+        String postId = postRef.key!; // 새로운 게시글의 키 가져오기!
         // 게시글 정보 저장
         await postRef.set({
           'postId' : postId,

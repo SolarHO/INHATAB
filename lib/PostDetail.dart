@@ -66,7 +66,7 @@ class PostDetailPage extends StatelessWidget {
           .reference()
           .child('boardinfo')
           .child(postId)
-          .child('contents');
+          .child('contents'); //내용이 들어간 노드
 
       DatabaseEvent event = await postRef.once();
       DataSnapshot snapshot = event.snapshot;
