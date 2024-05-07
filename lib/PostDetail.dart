@@ -77,8 +77,8 @@ class PostDetailPage extends StatelessWidget {
 
       if (postData != null) {
         return {
-          'title': postData['title'],
-          'content': postData['content'],
+          'title': postData['title'], //제목
+          'content': postData['content'], // 내용
           'timestamp': postData['timestamp'],
         };
       } else {

@@ -106,7 +106,7 @@ class _LoginWidgetState extends State<LoginWidget>
 
 
 
-      // GoRouter를 사용하여 TestPage로 이동
+      // GoRouter를 사용하여 홈Page로 이동
       GoRouter.of(context).go('HomePage');
       GoRouter.of(context).go('/');
     } catch (e) {

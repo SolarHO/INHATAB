@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
 
      // routeInformationProvider: _router.routeInformationProvider,
      // routerDelegate: _router.routerDelegate, //routeInformationParser에서 변환된 값을 어떤 라우트로 보여줄 지 정하는 함수
-     // routeInformationParser: _router.routeInformationParser, //라우트 상태 반환 함수
+     // routeInformationParser: _router.routeInformationParser, //라우트 상태 반환 함수 ㅁ
       debugShowCheckedModeBanner: false, //우측 상단 디버그 배너 삭제
       routerConfig: router, //라우터 사용
     );
