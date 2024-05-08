@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class PostDetailPage extends StatelessWidget {
   final String postId;
