@@ -91,7 +91,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
           : FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: Color(0x4C181BF8),
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
           backgroundColor: Color(0x4C181BF8),
           title: Text(
@@ -105,7 +105,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
           ),
           automaticallyImplyLeading: false, // 뒤로가기 버튼 자동 생성 비활성화
           leading: IconButton( // 왼쪽에 아이콘 추가
-            icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+            icon: Icon(Icons.arrow_back, color: Colors.white,), // 뒤로가기 아이콘
             onPressed: () {
               GoRouter.of(context).go('/Bbs'); // 게시판화면으로이동
             },

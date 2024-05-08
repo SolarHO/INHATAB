@@ -39,7 +39,7 @@ class _BbsWidgetState extends State<BbsWidget> {
           : FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: Color(0x4C181BF8),
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
           backgroundColor: Color(0x4C181BF8),
           automaticallyImplyLeading: false,
