@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import '../widget/schedule_widget.dart' show ScheduleWidget;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {

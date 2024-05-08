@@ -1,7 +1,5 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../model/bbs_model.dart';
 export '../model/bbs_model.dart';
