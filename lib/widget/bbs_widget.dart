@@ -18,7 +18,7 @@ class _BbsWidgetState extends State<BbsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<String> _postTitles = ['자유게시판','홍보게시판','장터게시판','동아리게시판']; //게시판 종류입니다. 해당 값을 세션으로 가져가서 글작성,글보여주기 등을 수행합니다.
-                                                        //그래서 게시판 추가할거면 여기다가 쉼표하고 하나 넣어주시면 됩니덩
+                                                        //그래서 게시판 추가할거면 여기다가 쉼표하고 하나 넣어주시면 됩니덩 게시판종류변경됨
   @override
   void initState() {
     super.initState();

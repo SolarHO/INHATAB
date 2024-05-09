@@ -73,7 +73,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         });
 
         // 게시글 저장 후 이전 화면으로 이동
-        GoRouter.of(context).go('/Boardload');
+        GoRouter.of(context).go('/Boardload'); //경로변경
       } else {
         throw Exception('사용자 정보를 가져올 수 없습니다.');
       }
