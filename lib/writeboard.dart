@@ -1,11 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Firebase Storage 패키지 추가
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart'; // Image Picker 패키지 추가
+import 'dart:io';
 class WriteBoardPage extends StatefulWidget {
   const WriteBoardPage({Key? key}) : super(key: key);
 
@@ -16,6 +18,8 @@ class WriteBoardPage extends StatefulWidget {
 class _WriteBoardPageState extends State<WriteBoardPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+  String? _imageUrl;
+  String? _fileName; // 파일 이름을 저장할 변수 추가
 
   String generateRandomId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -24,25 +28,48 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         8, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
   }
 
+  // 이미지 선택 및 업로드 함수
+  Future<String?> _uploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery); // 갤러리에서 이미지 선택
+
+    if (pickedFile != null) {
+      // 이미지 파일이 선택된 경우에만 실행
+      final String postId = generateRandomId();
+      final String fileName = 'images/$postId.jpg'; // Firebase Storage에 저장될 파일 경로
+
+      final Reference storageRef = FirebaseStorage.instance.ref().child(fileName); // 저장소 참조 생성
+      final UploadTask uploadTask = storageRef.putFile(File(pickedFile.path)); // 파일 업로드
+
+      // 파일 업로드가 완료되면 다운로드 URL을 반환
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      setState(() {
+        _imageUrl = downloadUrl; // 다운로드 URL 저장
+        _fileName = pickedFile.path.split('/').last; // 파일 이름 저장
+      });
+
+      return downloadUrl; // 다운로드 URL 반환
+    } else {
+      return null; // 이미지 선택이 취소된 경우 null 반환
+    }
+  }
+
   Future<void> _savePost() async {
     try {
-      // 현재 로그인된 사용자 가져오기
       User? user = FirebaseAuth.instance.currentUser;
       final String postId = generateRandomId();
 
-      // Firebase Realtime Database에서 사용자 정보 가져오기
       DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
-      DatabaseEvent event = await userRef.child(user!.uid).once(); // 현재 사용자의 UID에 해당하는 정보 가져오기
+      DatabaseEvent event = await userRef.child(user!.uid).once();
       DataSnapshot snapshot = event.snapshot;
       Map<dynamic, dynamic>? userData = snapshot.value as Map<dynamic, dynamic>?;
 
       if (userData != null) {
-        String userName = userData['name'] ?? 'Unknown'; // 사용자의 이름 가져오기
+        String userName = userData['name'] ?? 'Unknown';
 
-        // 현재 시간 가져오기
         DateTime now = DateTime.now();
-
-        // 시간을 원하는 형식의 문자열로 변환
         String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -51,29 +78,27 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           throw Exception('게시판을 선택하지 않았습니다.');
         }
 
-        // Firebase Realtime Database에 게시글 저장
         DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).push();
-        String postId = postRef.key!; // 새로운 게시글의 키 가져오기
+        String postId = postRef.key!;
 
-        // 게시글 정보 저장
         await postRef.set({
           'postId': postId,
-          'title': _titleController.text, // 게시글 제목
-          'uid': user.uid, // 현재 사용자의 UID
-          'name': userName, // 사용자의 이름
-          'timestamp': timestamp, // 현재 시간을 문자열로 저장
+          'title': _titleController.text,
+          'uid': user.uid,
+          'name': userName,
+          'timestamp': timestamp,
+
         });
 
-        // 게시글 내용을 별도의 하위 노드로 저장 (contents)
         DatabaseReference contentRef = postRef.child('contents');
         await contentRef.set({
-          'title': _titleController.text, // 게시글 제목
-          'content': _contentController.text, // 게시글 내용
-          'timestamp': timestamp, // 현재 시간을 문자열로 저장
+          'title': _titleController.text,
+          'content': _contentController.text,
+          'timestamp': timestamp,
+          'imageUrl': _imageUrl, // 이미지 URL 저장
         });
 
-        // 게시글 저장 후 이전 화면으로 이동
-        GoRouter.of(context).go('/Boardload'); //경로변경
+        GoRouter.of(context).go('/Boardload');
       } else {
         throw Exception('사용자 정보를 가져올 수 없습니다.');
       }
@@ -82,6 +107,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
       GoRouter.of(context).go('/Boardload');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,12 +131,30 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
               decoration: InputDecoration(
                 labelText: '내용',
               ),
-              maxLines: null, // 다중 라인 입력 가능
+              maxLines: null,
             ),
             SizedBox(height: 16.0),
             ElevatedButton(
+              onPressed: _uploadImage,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.file_upload),
+                  SizedBox(width: 8.0),
+                  Text('이미지 업로드'),
+                ],
+              ),
+            ),
+            SizedBox(height: 8.0),
+            if (_fileName != null) // 파일 이름이 있을 경우에만 표시
+              Text(
+                '선택된 이미지: $_fileName',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            SizedBox(height: 8.0),
+            ElevatedButton(
               onPressed: _savePost,
-              child: Text('저장'),
+              child: Text('게시글 저장'),
             ),
           ],
         ),
@@ -118,4 +162,3 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
     );
   }
 }
-

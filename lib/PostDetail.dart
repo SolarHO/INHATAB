@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 class PostDetailPage extends StatelessWidget {
   final String postId;
 
@@ -15,7 +17,7 @@ class PostDetailPage extends StatelessWidget {
       ),
       body: FutureBuilder(
         future: _fetchPostDetails(),
-        builder: (context, snapshot) {
+        builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
@@ -43,6 +45,14 @@ class PostDetailPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 16),
+                  // 이미지를 보여주는 위젯 추가
+                  if (snapshot.data!['imageUrl'] != null)
+                    Image.network(
+                      snapshot.data!['imageUrl'],
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  SizedBox(height: 16),
                   Text(
                     snapshot.data!['content'],
                     style: TextStyle(
@@ -61,24 +71,31 @@ class PostDetailPage extends StatelessWidget {
   }
 
   Future<Map<String, dynamic>> _fetchPostDetails() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();  //게시판항목값을 세션으로 계속 받아옴 뒤에도 계속 활용함
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
     if (selectedBoard == null) {
       throw Exception('게시판을 선택하지 않았습니다.');
     }
     try {
-      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).child(postId).child('contents');
+      DatabaseReference postRef = FirebaseDatabase.instance
+          .reference()
+          .child('boardinfo')
+          .child('boardstat')
+          .child(selectedBoard)
+          .child(postId)
+          .child('contents');
 
       DatabaseEvent event = await postRef.once();
       DataSnapshot snapshot = event.snapshot;
-      Map<dynamic, dynamic>? postData = snapshot.value as Map<dynamic,
-          dynamic>?;
+      Map<dynamic, dynamic>? postData =
+      snapshot.value as Map<dynamic, dynamic>?;
 
       if (postData != null) {
         return {
-          'title': postData['title'], //제목
-          'content': postData['content'], // 내용
+          'title': postData['title'],
+          'content': postData['content'],
           'timestamp': postData['timestamp'],
+          'imageUrl': postData['imageUrl'], // 이미지 URL 추가
         };
       } else {
         throw Exception('게시글 데이터가 없습니다.');
