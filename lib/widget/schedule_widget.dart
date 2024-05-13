@@ -21,34 +21,26 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => ScheduleModel());
+    _model.onTasksUpdated = loadTasks;
+    loadTasks();
+    _model.context = context;
+  }
+
+  Future<void> loadTasks() async {
+    List<TimePlannerTask> loadedTasks = await _model.loadTasks();
+    setState(() {
+      tasks = loadedTasks;
+    });
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
+  
 
-  List<TimePlannerTask> tasks = [
-    TimePlannerTask(
-      // background color for task
-      color: Color.fromARGB(255, 11, 61, 122),
-      // day: Index of header, hour: Task will be begin at this hour
-      // minutes: Task will be begin at this minutes
-      dateTime: TimePlannerDateTime(day: 2, hour: 13, minutes: 35),
-      // Minutes duration of taskd
-      minutesDuration: 100,
-      // Days duration of task (use for multi days task)
-      daysDuration: 1,
-      onTap: () {},
-      child: Text(
-        'Start-Up\n4-401',
-        style: TextStyle(color: Colors.grey[350], fontSize: 12),
-      ),
-    ),
-  ];
-
+  List<TimePlannerTask> tasks = [];
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -76,7 +68,7 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final cellWidth = constraints.maxWidth * 0.16; // 17% of container width
+            final cellWidth = constraints.maxWidth * 0.16; //셀 너비 조정
             return TimePlanner(
               startHour: 9,
               endHour: 23,
@@ -91,6 +83,7 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
               ],
               style: TimePlannerStyle(
                 cellWidth: cellWidth.toInt(),
+                cellHeight: 60,
                 showScrollBar: false,
               ),
               tasks: tasks, // 여기에 작업 목록을 넣으세요.
@@ -109,9 +102,11 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
                   ),
                   title: Text('수업 추가'),
                 ),
-                body: TaskInputBottomSheet(),
+                body: TaskInputBottomSheet(model: _model),
               ),
-            );
+            ).then((_) {
+              loadTasks();
+            });
           },
           child: Icon(Icons.add),
         ),
@@ -121,6 +116,10 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
 }
 
 class TaskInputBottomSheet extends StatefulWidget {
+  final ScheduleModel model;
+  final List<Map<String, dynamic>> initialTasks; // 초기 시간표 정보를 전달하는 매개변수를 추가합니다.
+
+  TaskInputBottomSheet({required this.model, this.initialTasks = const []}); // 기본값을 빈 리스트로 설정합니다.
   @override
   _TaskInputBottomSheetState createState() => _TaskInputBottomSheetState();
 }
@@ -132,43 +131,45 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
   void initState() {
     super.initState();
     // 초기 작업 입력 필드 추가
-    tasks.add({
-      'className': '',
-      'professorName': '',
-      'day': '월',
-      'startTime': DateTime.now(),
-      'endTime': DateTime.now(),
-      'location': '',
-    });
-  }
-
-  void addNewTaskField() {
-    setState(() {
+    if (widget.initialTasks.isEmpty) {
+      // 초기 작업 입력 필드 추가
+      DateTime now = DateTime.now();
       tasks.add({
         'className': '',
         'professorName': '',
         'day': '월',
-        'startTime': DateTime.now(),
-        'endTime': DateTime.now(),
+        'startTime': DateTime(now.year, now.month, now.day, 9, 0),
+        'endTime': DateTime(now.year, now.month, now.day, 10, 0),
         'location': '',
       });
-    });
+    } else {
+      tasks = List<Map<String, dynamic>>.from(widget.initialTasks); // 초기 시간표 정보를 사용하여 상태를 설정합니다.
+    }
   }
-
   Future<void> _selectTime(BuildContext context, int index, String type) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(tasks[index][type]),
     );
     if (picked != null) {
+      DateTime newTime = DateTime(
+        tasks[index][type].year,
+        tasks[index][type].month,
+        tasks[index][type].day,
+        picked.hour,
+        picked.minute,
+      );
+
+      if (type == 'startTime' && newTime.isAtSameMomentAs(tasks[index]['endTime']) || newTime.isAfter(tasks[index]['endTime'])) {
+        // 시작 시간이 종료 시간보다 늦거나 같은 경우, 종료 시간을 시작 시간보다 한시간 뒤로 설정
+        tasks[index]['endTime'] = newTime.add(Duration(hours: 1));
+      } else if (type == 'endTime' && newTime.isAtSameMomentAs(tasks[index]['startTime']) || newTime.isBefore(tasks[index]['startTime'])) {
+        // 종료 시간이 시작 시간보다 빠르거나 같은 경우, 시작 시간을 종료 시간보다 한시간 빠르게 설정
+        tasks[index]['startTime'] = newTime.subtract(Duration(hours: 1));
+      }
+
       setState(() {
-        tasks[index][type] = DateTime(
-          tasks[index][type].year,
-          tasks[index][type].month,
-          tasks[index][type].day,
-          picked.hour,
-          picked.minute,
-        );
+        tasks[index][type] =newTime;
       });
     }
   }
@@ -184,10 +185,12 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
             return Column(
               children: [
                 TextField(
+                  controller: TextEditingController(text: task['className']), // 초기값 설정
                   onChanged: (value) => setState(() => tasks[index]['className'] = value),
                   decoration: InputDecoration(labelText: '수업명'),
                 ),
                 TextField(
+                  controller: TextEditingController(text: task['professorName']), // 초기값 설정
                   onChanged: (value) => setState(() => tasks[index]['professorName'] = value),
                   decoration: InputDecoration(labelText: '교수명'),
                 ),
@@ -210,23 +213,248 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
                     ),
                   ],
                 ),
-                TextField(
-                  onChanged: (value) => setState(() => tasks[index]['location'] = value),
-                  decoration: InputDecoration(labelText: '장소'),
-                ),
-                if (index == tasks.length - 1)
-                  TextButton(
-                    onPressed: addNewTaskField,
-                    child: Text('시간 및 장소 추가'),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0), // 원하는 패딩 값을 설정합니다.
+                  child: TextField(
+                    controller: TextEditingController(text: task['location']), // 초기값 설정
+                    onChanged: (value) => setState(() => tasks[index]['location'] = value),
+                    decoration: InputDecoration(labelText: '장소'),
                   ),
+                ),
               ],
             );
           }).toList(),
           ElevatedButton(
-            onPressed: () {
-              // 여기에 Firebase Realtime Database 저장 로직 추가
+            onPressed: () async {
+              //수업명이 입력되었는지 확인
+              for (var task in tasks) {
+                if (task['className'].isEmpty) {
+                  // 수업명이 입력되지 않은 경우, 알림을 표시하고 함수를 종료
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('수업명을 입력해주세요.')),
+                  );
+                  return;
+                }
+                if (task['startTime'].hour < 9 || task['endTime'].hour > 23) {
+                  // 시간대가 범위를 벗어나는 경우, 하단 스냅바를 표시하고 함수를 종료
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('수업시간은 09:00부터 23:00 사이여야 합니다.')),
+                  );
+                  return;
+                }
+              }
+              
+              if (widget.initialTasks.isEmpty) {
+              // 초기 시간표 정보가 없는 경우, addTasks를 호출합니다.
+                await widget.model.addTasks(tasks);
+              } else {
+              // 초기 시간표 정보가 있는 경우, editTasks를 호출합니다.
+                await widget.model.editTasks(tasks);
+              }
+              Navigator.pop(context);
             },
             child: Text('저장'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TaskBottomSheet extends StatefulWidget {
+  final ScheduleModel model;
+  final String Tkey;
+  final String className;
+  final String professorName;
+  final String day;
+  final DateTime startTime;
+  final DateTime endTime;
+  final String location;
+
+  TaskBottomSheet({
+    required this.model,
+    required this.Tkey,
+    required this.className,
+    required this.professorName,
+    required this.day,
+    required this.startTime,
+    required this.endTime,
+    required this.location,
+  });
+
+  @override
+  _TaskBottomSheetState createState() => _TaskBottomSheetState();
+}
+
+class _TaskBottomSheetState extends State<TaskBottomSheet> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      padding: EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(16, 0, 0, 0),
+            child: Text(
+              '${widget.className}',
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                color: Color(0xFF14181B),
+                fontSize: 24,
+                letterSpacing: 0,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(16, 4, 0, 8),
+            child: Text(
+              '${widget.professorName}\n${widget.location}\n${widget.day} ${DateFormat('HH:mm').format(widget.startTime)} - ${DateFormat('HH:mm').format(widget.endTime)}',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                color: Color(0xFF57636C),
+                fontSize: 14,
+                letterSpacing: 0,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ),
+          InkWell( // InkWell 위젯 추가
+            onTap: () async { // 클릭 이벤트 추가
+              await showModalBottomSheet(
+                context: context,
+                builder: (context) => Scaffold(
+                  appBar: AppBar(
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘 추가
+                      onPressed: () => Navigator.pop(context), // 아이콘을 누르면 BottomSheet 닫힘
+                    ),
+                    title: Text('수업 정보 수정'),
+                  ),
+                  body: TaskInputBottomSheet(
+                    model: ScheduleModel(),
+                    initialTasks: [{
+                      'Tkey': widget.Tkey,
+                      'className': widget.className,
+                      'professorName': widget.professorName,
+                      'day': widget.day,
+                      'startTime': widget.startTime,
+                      'endTime': widget.endTime,
+                      'location': widget.location,
+                    }],
+                  ),
+                ),
+              );
+              Navigator.pop(context);
+            },
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(12, 8, 12, 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Card(
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                      color: Color(0xFFF1F4F8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.mode_edit,
+                          color: Color(0xFF57636C),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(12, 0, 0, 0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '수정',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                color: Color(0xFF14181B),
+                                fontSize: 16,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          InkWell( // InkWell 위젯 추가
+            onTap: () async { // 클릭 이벤트 추가
+              // Firebase Realtime Database에서 해당 task 데이터 삭제
+              await widget.model.deleteTask(widget.Tkey);
+              Navigator.pop(context); // BottomSheet 닫기
+            },
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              child: Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(12, 8, 12, 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Card(
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                      color: Color(0xFFF1F4F8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: Color(0xFF57636C),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(12, 0, 0, 0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '삭제',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                color: Color(0xFF14181B),
+                                fontSize: 16,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

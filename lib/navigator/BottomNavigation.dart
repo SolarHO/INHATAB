@@ -72,11 +72,11 @@ class _BottomNavigationBarScaffoldState
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         destinations: const [
-          NavigationDestination(label: '홈', icon: Icon(Icons.home)),
-          NavigationDestination(label: '시간표', icon: Icon(Icons.schedule)),
-          NavigationDestination(label: '채팅', icon: Icon(Icons.chat)),
-          NavigationDestination(label: '게시판', icon: Icon(Icons.content_paste)),
-          NavigationDestination(label: '알림', icon: Icon(Icons.notifications)),
+          NavigationDestination(label: '홈', icon: Icon(Icons.home,size: 30,)),
+          NavigationDestination(label: '시간표', icon: Icon(Icons.schedule,size: 30)),
+          NavigationDestination(label: '채팅', icon: Icon(Icons.chat,size: 30,)),
+          NavigationDestination(label: '게시판', icon: Icon(Icons.content_paste,size: 30,)),
+          NavigationDestination(label: '알림', icon: Icon(Icons.notifications,size: 30)),
         ],
         onDestinationSelected: onDestinationSelected,
       ),

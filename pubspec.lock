@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: barcode
-      sha256: "1fe4a55344505850517ce72d4a3a7b9ccf51b0dc1631ee7e552f6eacc4947f96"
+      sha256: ab180ce22c6555d77d45f0178a523669db67f95856e3378259ef2ffeb43e6003
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.7"
+    version: "2.2.8"
   barcode_widget:
     dependency: transitive
     description:
@@ -157,10 +157,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_icons
-      sha256: d57953e10f9f8327ce64a508a355f0b1ec902193f66288e8cb5070e7c47eeb2d
+      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.6"
+    version: "1.0.8"
   emoji_flag_converter:
     dependency: transitive
     description:
@@ -237,26 +237,26 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_auth
-      sha256: "5b4f605a8c409c52bf130c4f1442046b1af0fca006767fdd3f8561bf5305f94c"
+      sha256: f0a75f61992d036e4c46ad0e9febd364d98aa2c092690a5475cb1421a8243cfe
       url: "https://pub.dev"
     source: hosted
-    version: "4.19.1"
+    version: "4.19.5"
   firebase_auth_platform_interface:
     dependency: transitive
     description:
       name: firebase_auth_platform_interface
-      sha256: ad0d82c1e08eac29a23b125f6256b91fd34d0e2c1d885b0313a98056847dd9cd
+      sha256: feb77258404309ffc7761c78e1c0ad2ed5e4fdc378e035619e2cc13be4397b62
       url: "https://pub.dev"
     source: hosted
-    version: "7.2.2"
+    version: "7.2.6"
   firebase_auth_web:
     dependency: transitive
     description:
       name: firebase_auth_web
-      sha256: "93c83a2edb8ad1954183f939dcfe1883b7bdc188957d1271b618b7c5917d1c6d"
+      sha256: "6d527f357da2bf93a67a42b423aa92943104a0c290d1d72ad9a42c779d501cd2"
       url: "https://pub.dev"
     source: hosted
-    version: "5.11.1"
+    version: "5.11.5"
   firebase_core:
     dependency: "direct main"
     description:
@@ -285,26 +285,26 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_database
-      sha256: "0d91963e9fcfb7f543e66283efbfbfe1bb655a16e55471e4394576f76434be7e"
+      sha256: "59c711cce8e998389b45723f68b0dad65bbfad77acd634ce2c562049aeab1a5e"
       url: "https://pub.dev"
     source: hosted
-    version: "10.5.1"
+    version: "10.5.5"
   firebase_database_platform_interface:
     dependency: transitive
     description:
       name: firebase_database_platform_interface
-      sha256: bd445f52e1513860bf652b2fa52243953be585e4e825532e59d3f3b0fd4f8b57
+      sha256: "76c3e9d8f00c7e7bc1acd957dc29ac5696d67611fda38cf1371159b3c840a5e7"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.5+29"
+    version: "0.2.5+33"
   firebase_database_web:
     dependency: transitive
     description:
       name: firebase_database_web
-      sha256: c9cfecb7371e14c4e9c48b5ea382f4e3988a09974ff4e9813b979923b2a46ae7
+      sha256: d5795e387f507e20146f689ddddb4674451492fbd513744c9513faaab761cad7
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.5+1"
+    version: "0.2.5+5"
   firebase_storage:
     dependency: "direct main"
     description:
@@ -1049,10 +1049,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_macos
-      sha256: b7244901ea3cf489c5335bdacda07264a6e960b1c1b1a9f91e4bc371d9e68234
+      sha256: "9a1a42d5d2d95400c795b2914c36fdcb525870c752569438e4ebb09a2b5d90de"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   url_launcher_platform_interface:
     dependency: "direct main"
     description:
@@ -1065,10 +1065,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_web
-      sha256: "3692a459204a33e04bc94f5fb91158faf4f2c8903281ddd82915adecdb1a901d"
+      sha256: "8d9e750d8c9338601e709cd0885f95825086bd8b642547f26bda435aade95d8a"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "2.3.1"
   url_launcher_windows:
     dependency: transitive
     description:
@@ -1113,10 +1113,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "0a989dc7ca2bb51eac91e8fd00851297cfffd641aa7538b165c62637ca0eaa4a"
+      sha256: "0eaf06e3446824099858367950a813472af675116bf63f008a4c2a75ae13e9cb"
       url: "https://pub.dev"
     source: hosted
-    version: "5.4.0"
+    version: "5.5.0"
   xdg_directories:
     dependency: transitive
     description:
