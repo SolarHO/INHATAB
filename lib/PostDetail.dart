@@ -1,14 +1,104 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-class PostDetailPage extends StatelessWidget {
+class PostDetailPage extends StatefulWidget {
   final String postId;
 
   const PostDetailPage({Key? key, required this.postId}) : super(key: key);
 
+  @override
+  _PostDetailPageState createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends State<PostDetailPage> {
+  late DatabaseReference postRef;
+
+  bool liked = false;
+  int likeCount = 0; // 좋아요 수를 저장하는 변수 추가
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      String? selectedBoard = prefs.getString('selectedBoard');
+      if (selectedBoard == null) {
+        throw Exception('게시판을 선택하지 않았습니다.');
+      }
+      postRef = FirebaseDatabase.instance
+          .reference()
+          .child('boardinfo')
+          .child('boardstat')
+          .child(selectedBoard)
+          .child(widget.postId)
+          .child('contents');
+
+      // 좋아요 수를 가져와서 변수에 저장
+      _fetchLikeCount();
+    });
+  }
+
+  Future<void> _fetchLikeCount() async {
+    try {
+      DatabaseEvent event = await postRef.once();
+      DataSnapshot snapshot = event.snapshot;
+
+      Map postData = snapshot.value as Map;
+      setState(() {
+        likeCount = postData['likecount'] ?? 0;
+      });
+    } catch (error) {
+      print("좋아요 수를 가져오는 도중 오류 발생: $error");
+    }
+  }
+
+
+  Future<void> _likePost() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('userId');
+    if (userId == null) {
+      throw Exception('사용자 ID를 찾을 수 없습니다.');
+    }
+
+    try {
+      // 사용자의 like 노드에 postid를 추가합니다.
+      DatabaseReference userRef = FirebaseDatabase.instance.reference().child(
+          'users').child(userId);
+      DatabaseEvent event = await userRef.child('like')
+          .child(widget.postId)
+          .once();
+      DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.value == null) {
+        // 좋아요를 누른 적이 없는 경우에만 실행합니다.
+        await postRef.child('likecount').set(ServerValue.increment(1));
+        await userRef.child('like').child(widget.postId).set(true);
+        await _fetchLikeCount(); // 좋아요 누를 때마다 좋아요 수 다시 가져오기
+      } else {
+        // 이미 눌렀다면 다이얼로그 창을 띄웁니다.
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('이미 좋아요를 눌렀습니다.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('확인'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (error) {
+      print("좋아요를 추가하는 데 실패했습니다: $error");
+      throw error;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,6 +149,22 @@ class PostDetailPage extends StatelessWidget {
                       fontSize: 18,
                     ),
                   ),
+                  SizedBox(height: 16),
+                  // 좋아요 버튼 추가
+                  Row(
+                    children: [
+                      Text(
+                        '좋아요 수: $likeCount',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      SizedBox(width: 8),
+                      if (!liked)
+                        ElevatedButton(
+                          onPressed: _likePost,
+                          child: Text('좋아요'),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             );
@@ -77,14 +183,6 @@ class PostDetailPage extends StatelessWidget {
       throw Exception('게시판을 선택하지 않았습니다.');
     }
     try {
-      DatabaseReference postRef = FirebaseDatabase.instance
-          .reference()
-          .child('boardinfo')
-          .child('boardstat')
-          .child(selectedBoard)
-          .child(postId)
-          .child('contents');
-
       DatabaseEvent event = await postRef.once();
       DataSnapshot snapshot = event.snapshot;
       Map<dynamic, dynamic>? postData =

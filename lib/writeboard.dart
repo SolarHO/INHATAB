@@ -20,6 +20,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
   final TextEditingController _contentController = TextEditingController();
   String? _imageUrl;
   String? _fileName; // 파일 이름을 저장할 변수 추가
+  int? likecount;
 
   String generateRandomId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -96,6 +97,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           'content': _contentController.text,
           'timestamp': timestamp,
           'imageUrl': _imageUrl, // 이미지 URL 저장
+          'likecount' : 0,
         });
 
         GoRouter.of(context).go('/Boardload');
