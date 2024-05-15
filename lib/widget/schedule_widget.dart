@@ -62,7 +62,36 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
                   letterSpacing: 0,
                 ),
           ),
-          actions: [],
+          actions: [
+            Container(
+              margin: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 104, 97, 232),
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.add, color: Colors.white),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(
+                        leading: IconButton(
+                          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘 추가
+                          onPressed: () => Navigator.pop(context), // 아이콘을 누르면 BottomSheet 닫힘
+                        ),
+                        title: Text('수업 추가'),
+                      ),
+                      body: TaskInputBottomSheet(model: _model),
+                    ),
+                  ).then((_) {
+                    loadTasks();
+                  });
+                },
+              ),
+            ),
+          ],
           centerTitle: false,
           elevation: 2,
         ),
@@ -90,26 +119,6 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
             );
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘 추가
-                    onPressed: () => Navigator.pop(context), // 아이콘을 누르면 BottomSheet 닫힘
-                  ),
-                  title: Text('수업 추가'),
-                ),
-                body: TaskInputBottomSheet(model: _model),
-              ),
-            ).then((_) {
-              loadTasks();
-            });
-          },
-          child: Icon(Icons.add),
-        ),
       ),
     );
   }
@@ -125,6 +134,7 @@ class TaskInputBottomSheet extends StatefulWidget {
 }
 
 class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
+  //시간표 저장 바텀시트 위젯
   List<Map<String, dynamic>> tasks = [];
 
   @override
@@ -235,7 +245,7 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
                   );
                   return;
                 }
-                if (task['startTime'].hour < 9 || task['endTime'].hour > 23) {
+                if (task['startTime'].hour < 9 || task['endTime'].hour > 23 || task['startTime'].hour == 0 || task['endTime'].hour == 0) {
                   // 시간대가 범위를 벗어나는 경우, 하단 스냅바를 표시하고 함수를 종료
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('수업시간은 09:00부터 23:00 사이여야 합니다.')),
@@ -287,6 +297,7 @@ class TaskBottomSheet extends StatefulWidget {
 }
 
 class _TaskBottomSheetState extends State<TaskBottomSheet> {
+  //시간표 정보 바텀시트 위젯
   @override
   Widget build(BuildContext context) {
     return Container(

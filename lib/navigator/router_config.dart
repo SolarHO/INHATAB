@@ -15,14 +15,16 @@ import 'package:INHATAB/writeboard.dart';
 import 'package:INHATAB/PostDetail.dart';
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-final router = GoRouter(initialLocation: '/login', redirect: (context, state) {
+final router = GoRouter(initialLocation: '/', redirect: (context, state) {
     // FirebaseAuth 인스턴스를 가져옴(로그인정보)
     final user = FirebaseAuth.instance.currentUser;
 
-    // 사용자가 로그인되어 있지 않고 현재 경로가 로그인 페이지가 아닌 경우
-    if (user == null && state.location != '/login') {
-      // 로그인 페이지로 리디렉션
-      return '/login';
+    // 사용자가 로그인되어 있지 않고 현재 경로가 회원가입 및 로그인 페이지가 아닌 경우
+    if (user == null) {
+        if(state.location != '/CreateAccount') {
+          // 로그인 페이지로 리디렉션
+          return '/login';
+      }
     }
 
     // 그렇지 않으면 현재 경로를 그대로 사용
