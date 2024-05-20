@@ -66,12 +66,11 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
             Container(
               margin: EdgeInsets.all(8.0),
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 104, 97, 232),
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: IconButton(
-                icon: Icon(Icons.add, color: Colors.white),
+                icon: Icon(Icons.add_rounded, size: 30, color: Colors.white),
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,

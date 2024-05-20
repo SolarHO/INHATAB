@@ -17,9 +17,12 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
   late BbsModel _model;
   String selectedBoard = ''; // 추가된 부분
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final scrollController = ScrollController();
 
-  List<String> _postTitles = [];
+  List<String> _postTitles = []; //게시글 제목
   List<String> _postIds = []; // 게시글의 ID를 저장할 리스트 추가
+  List<int> _likeCounts = []; //게시글 좋아요 수
+  List<String> _timestamps = []; //게시글 작성 시간
 
   @override
   void initState() {
@@ -27,13 +30,21 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
     _model = createModel(context, () => BbsModel());
     _fetchPosts();
     _fetchSelectedBoard();
+    scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _model.dispose();
-
+    scrollController.dispose();
     super.dispose();
+  }
+
+  _scrollListener() {
+    if (scrollController.offset >= scrollController.position.maxScrollExtent &&
+        !scrollController.position.outOfRange) {
+      _fetchPosts(); // 스크롤이 최하단에 도달하면 게시글 불러오기
+    }
   }
 
   Future<void> _fetchSelectedBoard() async {
@@ -43,8 +54,11 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
     });
   }
 
+  int _limit = 15; //한번에 불러올 게시글 제한 15개
+  String? _lastKey; //마지막으로 불러온 글의 Key
+
   Future<void> _fetchPosts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();  //게시판항목값을 세션으로 계속 받아옴 뒤에도 계속 활용함
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
     if (selectedBoard == null) {
       throw Exception('게시판을 선택하지 않았습니다.');
@@ -52,26 +66,46 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
     try {
       DatabaseReference postRef = FirebaseDatabase.instance.reference().child(
           'boardinfo').child('boardstat').child(selectedBoard);
-      DatabaseEvent event = await postRef.limitToLast(10).once();
+      Query query = postRef.orderByKey();
+
+      // _lastKey가 있으면 _lastKey 이전의 게시글을 불러옴
+      if (_lastKey != null) {
+        query = query.endBefore(_lastKey);
+      }
+
+      // 가장 최근의 _limit개의 게시글을 불러옴
+      query = query.limitToLast(_limit);
+
+      DatabaseEvent event = await query.once();
       DataSnapshot snapshot = event.snapshot;
 
-      // 반환된 값이 null인지 체크
       if (snapshot.value != null) {
-        // 반환된 값이 'Object?' 유형이므로 'Map<dynamic, dynamic>'으로 캐스팅
         Map<dynamic, dynamic>? posts = snapshot.value as Map<dynamic, dynamic>?;
 
         if (posts != null) {
-          posts.forEach((key, value) {
-            // value가 null인지 체크
-            if (value != null && value is Map<dynamic, dynamic>) {
-              String? title = value['title']; // 제목 가져오기
-              String? postId = key; // 게시글의 ID 가져오기
-              if (title != null && postId != null) {
-                setState(() {
-                  _postTitles.add(title); // 가져온 제목을 리스트에 추가
-                  _postIds.add(postId); // 가져온 게시글 ID를 리스트에 추가
-                });
-              }
+          var reversedPosts = posts.entries.toList()
+            ..sort((a, b) => b.key.compareTo(a.key));
+
+          // _lastKey 업데이트
+          String newLastKey = reversedPosts.last.key;
+
+          //처음 작성된 게시글을 불러왔으면 새로고침 중단 
+          if (_lastKey == newLastKey) {
+            return;
+          }
+
+          _lastKey = newLastKey;
+
+          reversedPosts.forEach((entry) {
+            String? title = entry.value['title'];
+            String? postId = entry.key;
+            String? timestamp = entry.value['timestamp'];
+            if (title != null && postId != null) {
+              setState(() {
+                _postTitles.add(title);
+                _postIds.add(postId);
+                _timestamps.add(timestamp!);
+              });
             }
           });
         }
@@ -108,7 +142,21 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
               GoRouter.of(context).go('/Bbs'); // 게시판화면으로이동
             },
           ),
-          actions: [],
+          actions: [
+            Container(
+              margin: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.add_rounded, size: 30, color: Colors.white),
+                onPressed: () {
+                  GoRouter.of(context).go('/WriteBoardPage');
+                },
+              ),
+            ),
+          ],
           centerTitle: false,
           elevation: 2,
         ),
@@ -123,27 +171,18 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                 child: Container(
                   width: MediaQuery.of(context).size.width,
                   height: MediaQuery.of(context).size.height * 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        FlutterFlowTheme.of(context).alternate,
-                        FlutterFlowTheme.of(context).secondaryText,
-                      ],
-                      stops: [0, 1],
-                      begin: AlignmentDirectional(0.87, -1),
-                      end: AlignmentDirectional(-0.87, 1),
-                    ),
-                  ),
                   alignment: AlignmentDirectional(0, -1),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Expanded(
-                        child: ListView.builder(
+                        child: ListView.separated(
+                          controller: scrollController,
                           padding: EdgeInsets.zero,
                           itemCount: _postTitles.length,
+                          separatorBuilder: (context, index) => Divider(color: Colors.grey),
                           itemBuilder: (context, index) {
-                            return GestureDetector(
+                            return InkWell(
                               onTap: () {
                                 // 클릭한 게시물의 ID를 전달하여 상세화면으로 이동
                                 Navigator.push(
@@ -158,13 +197,26 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                                 padding: EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 20),
                                 margin: EdgeInsets.symmetric(vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  _postTitles[index],
-                                  style: TextStyle(fontSize: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _postTitles[index],
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    SizedBox(height: 4), // 간격 추가
+                                    Row(
+                                      children: [
+                                        Icon(Icons.thumb_up_alt, size: 12, color: Colors.blue),
+                                        Text(
+                                          ': 0  ', style: TextStyle(fontSize: 12, color: Colors.blue)),
+                                        Icon(Icons.mode_comment_rounded, size: 12, color: Colors.green),
+                                        Text(
+                                          ': 0  ', style: TextStyle(fontSize: 12, color: Colors.green)),
+                                        Text('${_timestamps[index]}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                      ]
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
@@ -177,12 +229,6 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
               ),
             ],
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            GoRouter.of(context).go('/WriteBoardPage');
-          },
-          child: Icon(Icons.add),
         ),
       ),
     );
