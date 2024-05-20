@@ -192,15 +192,19 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
         children: [
           ...tasks.map((task) {
             int index = tasks.indexOf(task);
+            task['classNameController'] ??= TextEditingController(text: task['className']);
+            task['professorNameController'] ??= TextEditingController(text: task['professorName']);
+            task['locationController'] ??= TextEditingController(text: task['location']);
+
             return Column(
               children: [
                 TextField(
-                  controller: TextEditingController(text: task['className']), // 초기값 설정
+                  controller: task['classNameController'],
                   onChanged: (value) => setState(() => tasks[index]['className'] = value),
                   decoration: InputDecoration(labelText: '수업명'),
                 ),
                 TextField(
-                  controller: TextEditingController(text: task['professorName']), // 초기값 설정
+                  controller: task['professorNameController'],
                   onChanged: (value) => setState(() => tasks[index]['professorName'] = value),
                   decoration: InputDecoration(labelText: '교수명'),
                 ),
@@ -224,9 +228,9 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0), // 원하는 패딩 값을 설정합니다.
+                  padding: const EdgeInsets.only(bottom: 16.0),
                   child: TextField(
-                    controller: TextEditingController(text: task['location']), // 초기값 설정
+                    controller: task['locationController'],
                     onChanged: (value) => setState(() => tasks[index]['location'] = value),
                     decoration: InputDecoration(labelText: '장소'),
                   ),
