@@ -44,7 +44,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     });
   }
 
-  Future<void> _fetchLikeCount() async {
+  Future<void> _fetchLikeCount() async { // 좋아요 수 표시
     try {
       DatabaseEvent event = await postRef.once();
       DataSnapshot snapshot = event.snapshot;
@@ -58,7 +58,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchPostDetails() async {
+  Future<Map<String, dynamic>> _fetchPostDetails() async {   //게시글내용 가져오기
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
     if (selectedBoard == null) {
@@ -85,7 +85,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<void> _likePost() async {
+  Future<void> _likePost() async {    // 좋아요! 메소드
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
     if (userId == null) {
@@ -125,7 +125,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<void> _fetchComments() async {
+  Future<void> _fetchComments() async {   // 댓글 표시 메서드
     try {
       DatabaseReference commentRef = postRef.child('comment');
       DatabaseEvent event = await commentRef.once();
@@ -146,10 +146,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   comment.replies.add(reply);
                 }
               });
+              // 대댓글도 시간순으로 정렬
+              comment.replies.sort((a, b) => a.timestamp.compareTo(b.timestamp));
             }
             fetchedComments.add(comment);
           }
         });
+        // 댓글을 시간순으로 정렬
+        fetchedComments.sort((a, b) => a.timestamp.compareTo(b.timestamp));
         setState(() {
           comments = fetchedComments;
         });
@@ -159,7 +163,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<void> _addComment(String comment, {String? parentId}) async {
+  Future<void> _addComment(String comment, {String? parentId}) async {  //댓글추가 메서드
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
     if (userId == null) {
@@ -205,7 +209,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  void _showReplyDialog(String parentId) {
+  void _showReplyDialog(String parentId) {    // 대댓글 작성 다이얼로그
     TextEditingController _replyController = TextEditingController();
     showDialog(
       context: context,
@@ -244,75 +248,75 @@ class _PostDetailPageState extends State<PostDetailPage> {
       appBar: AppBar(
         title: Text('게시글 상세 정보'),
       ),
-      body: FutureBuilder(
-        future: _fetchPostDetails(),
-        builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('게시글을 불러오는 동안 오류가 발생했습니다.'));
-          } else if (snapshot.hasData) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      snapshot.data!['title'],
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '작성 시간: ${snapshot.data!['timestamp']}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    if (snapshot.data!['imageUrl'] != null)
-                      Image.network(
-                        snapshot.data!['imageUrl'],
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    SizedBox(height: 16),
-                    Text(
-                      snapshot.data!['content'],
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Text(
-                          '좋아요 수: $likeCount',
-                          style: TextStyle(fontSize: 16),
+        body: FutureBuilder(
+          future: _fetchPostDetails(),
+          builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('게시글을 불러오는 동안 오류가 발생했습니다.'));
+            } else if (snapshot.hasData) {
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        snapshot.data!['title'],
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
-                        SizedBox(width: 8),
-                        if (!liked)
-                          ElevatedButton(
-                            onPressed: _likePost,
-                            child: Text('좋아요'),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '작성 시간: ${snapshot.data!['timestamp']}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      if (snapshot.data!['imageUrl'] != null)
+                        Image.network(
+                          snapshot.data!['imageUrl'],
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      SizedBox(height: 16),
+                      Text(
+                        snapshot.data!['content'],
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Text(
+                            '좋아요 수: $likeCount',
+                            style: TextStyle(fontSize: 16),
                           ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    _buildCommentSection(),
-                  ],
+                          SizedBox(width: 8),
+                          if (!liked)
+                            ElevatedButton(
+                              onPressed: _likePost,
+                              child: Text('좋아요'),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      _buildCommentSection(),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          } else {
-            return Center(child: Text('게시글을 찾을 수 없습니다.'));
-          }
-        },
-      ),
+              );
+            } else {
+              return Center(child: Text('게시글을 찾을 수 없습니다.'));
+            }
+          },
+        ),
     );
   }
 
