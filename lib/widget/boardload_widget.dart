@@ -22,6 +22,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
   List<String> _postTitles = []; //게시글 제목
   List<String> _postIds = []; // 게시글의 ID를 저장할 리스트 추가
   List<int> _likeCounts = []; //게시글 좋아요 수
+  List<int> _commentCounts = []; //게시글 좋아요 수
   List<String> _timestamps = []; //게시글 작성 시간
 
   @override
@@ -100,11 +101,15 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
             String? title = entry.value['title'];
             String? postId = entry.key;
             String? timestamp = entry.value['timestamp'];
+            int? likeCount = entry.value['likecount']; // 조아요수
+            int? commentCount = entry.value['commentcount']; // 댓글수
             if (title != null && postId != null) {
               setState(() {
                 _postTitles.add(title);
                 _postIds.add(postId);
                 _timestamps.add(timestamp!);
+                _likeCounts.add(likeCount ?? 0);
+                _commentCounts.add(commentCount ?? 0);
               });
             }
           });
@@ -209,10 +214,10 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                                       children: [
                                         Icon(Icons.thumb_up_alt, size: 12, color: Colors.blue),
                                         Text(
-                                          ': 0  ', style: TextStyle(fontSize: 12, color: Colors.blue)),
+                                          ' ${_likeCounts[index]}', style: TextStyle(fontSize: 12, color: Colors.blue)), // 좋아요
                                         Icon(Icons.mode_comment_rounded, size: 12, color: Colors.green),
                                         Text(
-                                          ': 0  ', style: TextStyle(fontSize: 12, color: Colors.green)),
+                                          ': ${_commentCounts[index]} ', style: TextStyle(fontSize: 12, color: Colors.green)), //댓글
                                         Text('${_timestamps[index]}', style: TextStyle(fontSize: 12, color: Colors.grey)),
                                       ]
                                     ),

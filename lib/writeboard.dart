@@ -97,7 +97,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           'content': _contentController.text,
           'timestamp': timestamp,
           'imageUrl': _imageUrl, // 이미지 URL 저장
-          'likecount' : 0,
+
         });
 
         GoRouter.of(context).go('/Boardload');
