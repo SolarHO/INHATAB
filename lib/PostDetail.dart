@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
-
+import 'package:provider/provider.dart';
+import '../model/chat_model.dart';
 class PostDetailPage extends StatefulWidget {
   final String postId;
 
@@ -160,7 +160,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<void> _addComment(String comment, {String? parentId}) async {
+  Future<void> _addComment(String comment, {String? parentId}) async { // 댓글추가메서드
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
     if (userId == null) {
@@ -243,6 +243,43 @@ class _PostDetailPageState extends State<PostDetailPage> {
       },
     );
   }
+  void _showChatConfirmationDialog(String postUserId) {  //채팅 다이얼로그
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('채팅하기'),
+          content: Text('작성자와 채팅하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startChatWithUser(postUserId);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+  Future<void> _startChatWithUser(String postUserId) async {
+    // ChatModel 인스턴스를 사용하여 채팅을 시작
+    final chatModel = Provider.of<ChatModel>(context, listen: false);
+    await chatModel.startChatWithUser(postUserId, context);
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +308,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       if (userId == postUserId) {
                         return Row(
                           children: [
-
                             IconButton(
                               icon: Icon(Icons.delete),
                               onPressed: () {
@@ -280,6 +316,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               },
                             ),
                           ],
+                        );
+                      } else {
+                        return IconButton(
+                          icon: Icon(Icons.chat),
+                          onPressed: () {
+                            _showChatConfirmationDialog(postUserId);
+                          },
                         );
                       }
                     }
@@ -367,7 +410,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  void _showDeleteConfirmationDialog() {
+  void _showDeleteConfirmationDialog() { //게시글삭제 다이얼로그창
     showDialog(
       context: context,
       builder: (context) {
@@ -394,7 +437,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  Future<void> _deletePost() async {
+  Future<void> _deletePost() async { //게시글 삭제메서드
     try {
       await postRef.remove();
       Navigator.pop(context); // 삭제 후 이전 화면으로 이동
@@ -402,7 +445,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       print('게시글을 삭제하는 동안 오류가 발생했습니다: $error');
     }
   }
-  Widget _buildCommentSection() {
+  Widget _buildCommentSection() { //
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,7 +460,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  Widget _buildCommentForm() {
+  Widget _buildCommentForm() { //댓글입력창
     return Row(
       children: [
         Expanded(
@@ -473,17 +516,17 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
-  Future<void> _deleteComment(String commentId) async {
+  Future<void> _deleteComment(String commentId) async {  //댓글삭제
     try {
       await postRef.child('contents').child('comment').child(commentId).update({'commentState': 1}); //댓글상태를 변화시켜서 삭제된댓글로 뜨게 함
       // commentcount 감소
-      await postRef.child('contents').child('commentcount').set(ServerValue.increment(-1)); //댓글수 감소
+      await postRef.child('commentcount').set(ServerValue.increment(-1)); //댓글수 감소로직 경로 바꾼거 적용안해놔서 다시적용함
       await _fetchComments();
     } catch (error) {
       print('댓글을 삭제하는 동안 오류가 발생했습니다: $error');
     }
   }
-  void _showDeleteReplyDialog(String commentId, String replyId) {
+  void _showDeleteReplyDialog(String commentId, String replyId) { //대댓글삭제 다이얼로그
     showDialog(
       context: context,
       builder: (context) {
@@ -521,7 +564,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Widget _buildCommentList() {
+  Widget _buildCommentList() {  //댓글위젯
     return ListView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),

@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:INHATAB/widget/boardload_widget.dart';
 import 'package:INHATAB/writeboard.dart';
-
+import 'package:INHATAB/ChatRoomPage.dart';
 import 'package:INHATAB/PostDetail.dart';
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -92,6 +92,13 @@ final router = GoRouter(initialLocation: '/', redirect: (context, state) {
     builder: (context, state) {
       final postId = state.pathParameters['postId']; // 경로에서 postId를 가져옵니다.
       return PostDetailPage(postId: postId ?? ''); // postId가 null일 경우 빈 문자열로 처리합니다.
+    },
+  ),
+  GoRoute(
+    path: '/chatroom/:chatId',  //채팅방으로 채팅방의 id를 가지고 이동함
+    builder: (context, state) {
+      final chatId = state.pathParameters['chatId']!;
+      return ChatRoomPage(chatId: chatId);
     },
   ),
 
