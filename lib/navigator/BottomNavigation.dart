@@ -28,13 +28,13 @@ class _BottomNavigationBarScaffoldState
   int getIndexFromPath(String path) {
     switch (path) {
       case '/':
-        return 0;
-      case '/Schedule':
-        return 1;
-      case '/Chat':
         return 2;
-      case '/Bbs':
+      case '/Schedule':
+        return 0;
+      case '/Chat':
         return 3;
+      case '/Bbs':
+        return 1;
       case '/Alert':
         return 4;
       default:
@@ -48,16 +48,16 @@ class _BottomNavigationBarScaffoldState
     });
     switch (index) {
       case 0:
-        context.go('/');
-        break;
-      case 1:
         context.go('/Schedule');
         break;
+      case 1:
+        context.go('/Bbs');
+        break;
       case 2:
-        context.go('/Chat');
+        context.go('/');
         break;
       case 3:
-        context.go('/Bbs');
+        context.go('/Chat');
         break;
       case 4:
         context.go('/Alert');
@@ -72,10 +72,10 @@ class _BottomNavigationBarScaffoldState
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         destinations: const [
-          NavigationDestination(label: '홈', icon: Icon(Icons.home,size: 30,)),
           NavigationDestination(label: '시간표', icon: Icon(Icons.schedule,size: 30)),
-          NavigationDestination(label: '채팅', icon: Icon(Icons.chat,size: 30,)),
           NavigationDestination(label: '게시판', icon: Icon(Icons.content_paste,size: 30,)),
+          NavigationDestination(label: '홈', icon: Icon(Icons.home,size: 30,)),
+          NavigationDestination(label: '채팅', icon: Icon(Icons.chat,size: 30,)),
           NavigationDestination(label: '알림', icon: Icon(Icons.notifications,size: 30)),
         ],
         onDestinationSelected: onDestinationSelected,

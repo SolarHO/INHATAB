@@ -4,10 +4,13 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart'; // Firebase Storage 패키지 추가
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // Image Picker 패키지 추가
 import 'dart:io';
+
+import 'model/BoardModel.dart';
 class WriteBoardPage extends StatefulWidget {
   const WriteBoardPage({Key? key}) : super(key: key);
 
@@ -21,6 +24,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
   String? _imageUrl;
   String? _fileName; // 파일 이름을 저장할 변수 추가
   int? likecount;
+  bool isAnonymous = false;
 
   String generateRandomId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -42,6 +46,11 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
       final Reference storageRef = FirebaseStorage.instance.ref().child(fileName); // 저장소 참조 생성
       final UploadTask uploadTask = storageRef.putFile(File(pickedFile.path)); // 파일 업로드
 
+      // 업로드 진행 상황을 모니터링
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        print('업로드 진행 상황: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%');
+      });
+
       // 파일 업로드가 완료되면 다운로드 URL을 반환
       final TaskSnapshot snapshot = await uploadTask;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
@@ -60,7 +69,6 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
   Future<void> _savePost() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
-      final String postId = generateRandomId();
 
       DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
       DatabaseEvent event = await userRef.child(user!.uid).once();
@@ -68,7 +76,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
       Map<dynamic, dynamic>? userData = snapshot.value as Map<dynamic, dynamic>?;
 
       if (userData != null) {
-        String userName = userData['name'] ?? 'Unknown';
+        String userName = userData['name'];
 
         DateTime now = DateTime.now();
         String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
@@ -88,7 +96,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           'uid': user.uid,
           'name': userName,
           'timestamp': timestamp,
-
+          'anony' : isAnonymous,
         });
 
         DatabaseReference contentRef = postRef.child('contents');
@@ -100,13 +108,16 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
 
         });
 
-        GoRouter.of(context).go('/Boardload');
+        // 게시글 저장 후에 결과를 반환하고 이전 페이지로 이동
+        Provider.of<BoardModel>(context, listen: false).clear();
+        Provider.of<BoardModel>(context, listen: false).fetchPosts();
+        Navigator.pop(context, 'refresh');
       } else {
         throw Exception('사용자 정보를 가져올 수 없습니다.');
       }
     } catch (e) {
       print('게시글 저장 오류: $e');
-      GoRouter.of(context).go('/Boardload');
+      Navigator.pop(context, 'refresh');
     }
   }
 
@@ -121,11 +132,26 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: '제목',
-              ),
+            Row(
+              children: [
+                Text("익명"),
+                Checkbox(
+                  value: isAnonymous, // 체크박스의 상태를 isAnonymous 변수와 동기화
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isAnonymous = value!; // 체크박스가 변경될 때 isAnonymous 변수 업데이트
+                    });
+                  },
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: '제목',
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 16.0),
             TextField(

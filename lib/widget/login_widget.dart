@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -98,6 +99,10 @@ class _LoginWidgetState extends State<LoginWidget>
       // SharedPreferences를 사용하여 사용자 정보 저장
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('userId', userCredential.user!.uid);
+      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
+      DatabaseEvent event = await userRef.child(userCredential.user!.uid).child('name').once();
+      DataSnapshot snapshot = event.snapshot;
+      prefs.setString('userName', snapshot.value as String);
 
 
 

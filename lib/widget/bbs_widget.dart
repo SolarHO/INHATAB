@@ -1,5 +1,7 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../model/BoardModel.dart';
 import '../model/bbs_model.dart';
 export '../model/bbs_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,6 +69,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                     SharedPreferences prefs =
                     await SharedPreferences.getInstance();
                     await prefs.setString('selectedBoard', title);
+                    Provider.of<BoardModel>(context, listen: false).fetchPosts();
                     GoRouter.of(context).go('/Boardload');
                   },
                   child: Container(
@@ -93,6 +96,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                           SharedPreferences prefs =
                           await SharedPreferences.getInstance();
                           await prefs.setString('selectedBoard', value);
+                          Provider.of<BoardModel>(context, listen: false).fetchPosts();
                           GoRouter.of(context).go('/Boardload');
                         });
                         },
@@ -114,6 +118,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                           SharedPreferences prefs =
                           await SharedPreferences.getInstance();
                           await prefs.setString('selectedBoard', value);
+                          Provider.of<BoardModel>(context, listen: false).fetchPosts();
                           GoRouter.of(context).go('/Boardload');
                         });
                         },
@@ -135,6 +140,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                           SharedPreferences prefs =
                           await SharedPreferences.getInstance();
                           await prefs.setString('selectedBoard', value);
+                          Provider.of<BoardModel>(context, listen: false).fetchPosts();
                           GoRouter.of(context).go('/Boardload');
                         });
                         },
@@ -156,6 +162,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                           SharedPreferences prefs =
                           await SharedPreferences.getInstance();
                           await prefs.setString('selectedBoard', value);
+                          Provider.of<BoardModel>(context, listen: false).fetchPosts();
                           GoRouter.of(context).go('/Boardload');
                         });
                         },
@@ -177,6 +184,7 @@ class _BbsWidgetState extends State<BbsWidget> {
                           SharedPreferences prefs =
                           await SharedPreferences.getInstance();
                           await prefs.setString('selectedBoard', value);
+                          Provider.of<BoardModel>(context, listen: false).fetchPosts();
                           GoRouter.of(context).go('/Boardload');
                         });
                         },
