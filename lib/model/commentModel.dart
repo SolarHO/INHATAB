@@ -158,6 +158,51 @@ class CommentModel with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteComment(String commentId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? selectedBoard = prefs.getString('selectedBoard');
+    DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
+    DataSnapshot repliesSnapshot = (await Ref.child('contents').child('comment').child(commentId).child('replies').once()).snapshot;
+
+    if (repliesSnapshot.value != null) {
+      // 대댓글이 있는 경우, 댓글의 이름과 내용을 "삭제"로 변경
+      await Ref.child('contents').child('comment').child(commentId).update({
+        'anony': false,
+        'userName': '(삭제)',
+        'comment': '삭제된 댓글입니다.',
+        'userId': 'unknown'
+      });
+    } else {
+      // 대댓글이 없는 경우, 댓글을 데이터베이스에서 삭제
+      await Ref.remove();
+    }
+    await Ref.child('commentcount').set(ServerValue.increment(-1));
+    notifyListeners();
+  }
+
+  Future<void> deleteReplies(String commentId, String replyId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? selectedBoard = prefs.getString('selectedBoard');
+    DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
+    DatabaseReference replyRef = Ref.child('contents').child('comment').child(commentId).child('replies').child(replyId);
+
+    // 대댓글 삭제
+    await replyRef.remove();
+
+    // 댓글의 대댓글과 userId를 확인
+    DataSnapshot commentSnapshot = (await Ref.child('contents').child('comment').child(commentId).once()).snapshot;
+    Map<dynamic, dynamic>? commentData = commentSnapshot.value as Map<dynamic, dynamic>?;
+    String? userId = commentData?['userId'];
+    Map<dynamic, dynamic>? replies = commentData?['replies'] as Map<dynamic, dynamic>?;
+
+    if (userId == 'unknown' && (replies == null || replies.isEmpty)) {
+      // userId가 'unknown'이고 대댓글이 없는 경우, 댓글을 데이터베이스에서 삭제
+      await Ref.child('contents').child('comment').child(commentId).remove();
+    }
+    await Ref.child('commentcount').set(ServerValue.increment(-1));
+    notifyListeners();
+  }
+
   // 모델을 초기화하는 메서드
   void clear() {
     postId = null;

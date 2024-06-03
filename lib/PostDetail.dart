@@ -47,7 +47,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('게시글 상세보기'),
+        title: Text(Provider.of<BoardModel>(context).selectedBoard.toString()),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -59,9 +59,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(postModel.title ?? '', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       Text(postModel.writerName ?? '', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       Text(postModel.timestamp ?? '', style: TextStyle(fontSize: 11)),
-                      Text(postModel.title ?? '', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       SizedBox(height: 16),
                       //이미지 영역
                       SizedBox(height: 16),
@@ -132,7 +132,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 Text(
                                   commentModel.userNames[index],
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: commentModel.userIds[index] != 'unknown' ? FontWeight.bold : null,
                                     color: commentModel.userIds[index] == commentModel.postWriter ? Colors.green : null,
                                   ),
                                 ),
@@ -144,34 +144,62 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               ],
                             ),
                             subtitle: Text(commentModel.commentContents[index]),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton( //대댓글 추가
-                                  icon: Icon(Icons.mode_comment_rounded),
-                                  iconSize: 16.0,
-                                  onPressed: () {
-                                    _showReplyDialog(commentModel.commentIds[index]);
-                                  },
-                                ),
-                                IconButton( //대댓글 추가
-                                  icon: Icon(Icons.send),
-                                  iconSize: 16.0,
-                                  onPressed: () {
-                                    
-                                  },
-                                ),
-                                Visibility(
-                                  visible: commentModel.userIds[index] == prefs?.getString('userId'),
-                                  child: IconButton(
-                                    icon: Icon(Icons.delete),
-                                    iconSize: 16.0,
+                            trailing: Visibility(
+                              visible: commentModel.userIds[index] != 'unknown',
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton( //대댓글 추가
+                                    icon: Icon(Icons.mode_comment_rounded),
+                                    iconSize: 13.0,
+                                    onPressed: () {
+                                      _showReplyDialog(commentModel.commentIds[index]);
+                                    },
+                                  ),
+                                  IconButton( //쪽지 보내기
+                                    icon: Icon(Icons.send),
+                                    iconSize: 13.0,
                                     onPressed: () {
                                       
                                     },
                                   ),
-                                ),
-                              ],
+                                  Visibility( //댓글 삭제
+                                    visible: commentModel.userIds[index] == prefs?.getString('userId'),
+                                    child: IconButton(
+                                      icon: Icon(Icons.delete),
+                                      iconSize: 13.0,
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              content: Text('댓글을 삭제하시겠습니까?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  child: Text('취소'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: Text('확인'),
+                                                  onPressed: () async {
+                                                    await Provider.of<CommentModel>(context, listen: false).deleteComment(commentModel.commentIds[index]);
+                                                    Provider.of<BoardModel>(context, listen: false).decCommentCount(widget.postId);
+                                                    Provider.of<CommentModel>(context, listen: false).clear();
+                                                    Provider.of<CommentModel>(context, listen: false).fetchComments(widget.postId);
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           ListView.builder(
@@ -194,6 +222,53 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     ],
                                   ),
                                   subtitle: Text(commentModel.replies[index][replyIndex]['replyContent']!),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton( //쪽지 보내기
+                                        icon: Icon(Icons.send),
+                                        iconSize: 13.0,
+                                        onPressed: () {
+                                          
+                                        },
+                                      ),
+                                      Visibility(
+                                        visible: commentModel.replies[index][replyIndex]['replyuid'] == prefs?.getString('userId'),
+                                        child: IconButton( //대댓글 삭제
+                                          icon: Icon(Icons.delete),
+                                          iconSize: 13.0,
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  content: Text('대댓글을 삭제하시겠습니까?'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      child: Text('취소'),
+                                                      onPressed: () {
+                                                        Navigator.of(context).pop();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: Text('확인'),
+                                                      onPressed: () async {
+                                                        await Provider.of<CommentModel>(context, listen: false).deleteReplies(commentModel.commentIds[index], commentModel.replies[index][replyIndex]['replyId']!);
+                                                        Provider.of<BoardModel>(context, listen: false).decCommentCount(widget.postId);
+                                                        Provider.of<CommentModel>(context, listen: false).clear();
+                                                        Provider.of<CommentModel>(context, listen: false).fetchComments(widget.postId);
+                                                        Navigator.of(context).pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },

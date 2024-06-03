@@ -106,10 +106,18 @@ class BoardModel with ChangeNotifier {
     }
   }
 
-  void incCommentCount(String postId) {
+  void incCommentCount(String postId) { //댓글 수 증가
     int index = postIds.indexOf(postId);
     if (index != -1) {
       commentCounts[index] ++;
+      notifyListeners();
+    }
+  }
+
+  void decCommentCount(String postId) { //댓글 수 감소
+    int index = postIds.indexOf(postId);
+    if (index != -1) {
+      commentCounts[index] --;
       notifyListeners();
     }
   }
