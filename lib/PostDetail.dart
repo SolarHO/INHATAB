@@ -4,7 +4,7 @@ import 'package:INHATAB/model/commentModel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:INHATAB/model/chat_model.dart';
 class PostDetailPage extends StatefulWidget {
   final String postId;
 
@@ -19,14 +19,20 @@ class _PostDetailPageState extends State<PostDetailPage> {
   SharedPreferences? prefs;
   bool _isAnonymous = true; //댓글 익명 여부
   bool _isReplyAnonymous = true; // 대댓글 익명 여부
-
+  String? writerStatus;
   @override
   void initState() {
     super.initState();
     initPrefs();
     Provider.of<PostModel>(context, listen: false).clear();
     Provider.of<CommentModel>(context, listen: false).clear();
-    Provider.of<PostModel>(context, listen: false).fetchPost(widget.postId);
+    Provider.of<PostModel>(context, listen: false).fetchPost(widget.postId).then((_) async {
+      String? writerId = Provider.of<PostModel>(context, listen: false).writerId;
+      if (writerId != null) {
+        writerStatus = await Provider.of<PostModel>(context, listen: false).fetchWriterStatus(writerId); //작성자 상태가 탈퇴된 사용자인지 구분
+        setState(() {}); // 상태 업데이트
+      }
+    });
     Provider.of<CommentModel>(context, listen: false).fetchComments(widget.postId);
   }
 
@@ -43,11 +49,88 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
+  void _showChatConfirmationDialog(String postUserId) {  //채팅 다이얼로그
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('채팅하기'),
+          content: Text('작성자와 채팅하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startChatWithUser(postUserId);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _startChatWithUser(String postUserId) async {
+    try {
+      final chatModel = Provider.of<ChatModel>(context, listen: false);
+      await chatModel.startChatWithUser(postUserId, context);
+    } catch (error) {
+      print('채팅방 생성 중 오류 발생: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(Provider.of<BoardModel>(context).selectedBoard.toString()),
+        actions: [
+          FutureBuilder(
+            future: SharedPreferences.getInstance(),
+            builder: (context, prefsSnapshot) {
+              if (prefsSnapshot.connectionState == ConnectionState.done &&
+                  prefsSnapshot.hasData) {
+                SharedPreferences prefs = prefsSnapshot.data as SharedPreferences;
+                String? userId = prefs.getString('userId');
+                print('Current User ID: $userId'); // 디버깅 로그 추가
+                return Consumer<PostModel>(
+                  builder: (context, postModel, child) {
+                    if (userId == postModel.writerId) {
+                      return Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              // 삭제 버튼 눌렀을 때 동작
+                              // _showDeleteConfirmationDialog();
+                            },
+                          ),
+                        ],
+                      );
+                    } else if (writerStatus != 'deleted') {
+                      return IconButton(
+                        icon: Icon(Icons.chat),
+                        onPressed: () {
+                          _showChatConfirmationDialog(postModel.writerId!);
+                        },
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  },
+                );
+              }
+              return SizedBox.shrink(); // SharedPreferences 로딩 중일 경우 빈 공간 반환
+            },
+          ),
+        ],
+
       ),
       body: SingleChildScrollView(
         child: Padding(

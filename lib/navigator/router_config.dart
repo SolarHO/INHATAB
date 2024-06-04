@@ -13,6 +13,7 @@ import 'package:INHATAB/widget/boardload_widget.dart';
 import 'package:INHATAB/writeboard.dart';
 import 'package:INHATAB/ChatRoomPage.dart';
 import 'package:INHATAB/PostDetail.dart';
+import 'package:INHATAB/widget/myProfile_widget.dart';
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final router = GoRouter(initialLocation: '/', redirect: (context, state) {
@@ -101,6 +102,9 @@ final router = GoRouter(initialLocation: '/', redirect: (context, state) {
       return ChatRoomPage(chatId: chatId);
     },
   ),
-
+  GoRoute(
+    path: '/myProfile',
+    builder: (context, state) => MyProfileWidget(),
+  ),
   //라우터 추가시 이 아래에 추가
 ]);

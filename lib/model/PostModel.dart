@@ -91,6 +91,20 @@ class PostModel with ChangeNotifier {
     }
   }
 
+
+  Future<String> fetchWriterStatus(String writerId) async { //사용자의 상태확인 (삭제된사용자일경우....)
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(writerId);
+    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value == null) {
+      return 'deleted';
+    }
+
+    Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+    return userData['status'] ?? 'active';
+  }
+
+
   // 모델을 초기화하는 메서드
   void clear() {
     PostId = null;

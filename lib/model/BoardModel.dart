@@ -60,28 +60,46 @@ class BoardModel with ChangeNotifier {
 
           lastKey = newLastKey;
 
-          reversedPosts.forEach((entry) {
-            String? title = entry.value['title'];
-            String? postId = entry.key;
+
+          for (var entry in reversedPosts) {
+            String title = entry.value['title']?.toString() ?? '제목 없음';
+            String postId = entry.key;
             String? username;
-            if(entry.value['anony'] == true) {
+            if (entry.value['anony'] == true) {
               username = "익명";
-            } else if(entry.value['anony'] == false) {
-              username = entry.value['name'];
+            } else {
+              String userId = entry.value['uid']?.toString() ?? '';
+              if (userId.isNotEmpty) {
+                username = await _fetchUserName(userId) ?? "탈퇴된 사용자";
+              } else {
+                username = "알 수 없음";
+              }
             }
-            String? timestamp = entry.value['timestamp'];
-            int? likeCount = entry.value['likecount'];
-            int? commentCount = entry.value['commentcount'];
-            if (title != null && postId != null) {
-              addPost(title, postId, username!, likeCount ?? 0, commentCount ?? 0, timestamp!);
+            String timestamp = entry.value['timestamp']?.toString() ?? DateTime.now().toIso8601String();
+            int likeCount = entry.value['likecount'] ?? 0;
+            int commentCount = entry.value['commentcount'] ?? 0;
+
+            if (title != null && postId != null && username != null) {
+              addPost(title, postId, username, likeCount, commentCount, timestamp);
             }
-          });
+          }
         }
       }
     } catch (error) {
       print("게시글 정보를 가져오는 데 실패했습니다: $error");
     }
   }
+  Future<String?> _fetchUserName(String userId) async {
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
+    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+      return userData['name'];
+    }
+    return null;
+  }
+
 
   void addPost(String title, String id, String username, int likeCount, int commentCount, String timestamp) { //게시글 추가
     postTitles.add(title);

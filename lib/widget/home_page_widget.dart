@@ -1,7 +1,7 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:go_router/go_router.dart';
 import '../model/home_page_model.dart';
 export '../model/home_page_model.dart';
 
@@ -65,11 +65,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             Align(
               alignment: AlignmentDirectional(0, 0),
               child: Padding(
-                padding: EdgeInsets.all(18),
-                child: FaIcon(
-                  FontAwesomeIcons.solidUserCircle,
-                  color: FlutterFlowTheme.of(context).accent4,
-                  size: 24,
+                padding: EdgeInsets.all(18), // 기존의 패딩 유지
+                child: IconButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.solidUserCircle,
+                    color: FlutterFlowTheme.of(context).accent4,
+                    size: 24,
+                  ),
+                  alignment: Alignment(0.0, -1.0), // 아이콘을 위로 조정
+                  padding: EdgeInsets.zero, // 기본 패딩을 제거
+                  onPressed: () {
+                    context.go('/myProfile');
+                  },
                 ),
               ),
             ),

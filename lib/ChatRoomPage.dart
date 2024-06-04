@@ -19,15 +19,19 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> messages = [];
-  String opponentName = '상대방'; // 상대방 이름을 저장할 변수
-
+  String opponentName = '탈퇴된 사용자'; // 상대방 이름을 저장할 변수
+  String? currentUserId;
   @override
   void initState() {
     super.initState();
     _fetchOpponentName();
     _fetchMessages();
+    _getCurrentUserId();
   }
 
+  Future<void> _getCurrentUserId() async {
+    currentUserId = await Provider.of<ChatModel>(context, listen: false).getCurrentUserId();
+  }
   Future<void> _fetchOpponentName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
@@ -119,74 +123,84 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-      appBar: AppBar(
-        backgroundColor: Color(0x4C181BF8),
-        automaticallyImplyLeading: false,
-        title: Text(
-          '$opponentName님과의 채팅방',
-          style: FlutterFlowTheme.of(context).headlineMedium.override(
-            fontFamily: 'Outfit',
-            color: Colors.white,
-            fontSize: 22,
-            letterSpacing: 0,
-          ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            context.go('/Chat');
-          },
-        ),
-        actions: [],
-        centerTitle: false,
-        elevation: 2,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(message['message']),
-                      subtitle: Text('${message['userName']} - ${message['timestamp']}'),
-                    ),
-                    Divider(), // 구분선 추가
-                  ],
-                );
-              },
+    return WillPopScope(
+      onWillPop: () async {
+        context.go('/Chat'); // 현재 페이지를 닫고 채팅 목록 페이지로 이동합니다.
+        return false; // 기본 동작을 수행하지 않도록 false를 반환합니다.
+      },
+      child: Scaffold(
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        appBar: AppBar(
+          backgroundColor: Color(0x4C181BF8),
+          automaticallyImplyLeading: false,
+          title: Text(
+            '$opponentName님과의 채팅방',
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+              fontFamily: 'Outfit',
+              color: Colors.white,
+              fontSize: 22,
+              letterSpacing: 0,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: '메시지를 입력하세요...',
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              context.go('/Chat');
+            },
+          ),
+          actions: [],
+          centerTitle: false,
+          elevation: 2,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final message = messages[index];
+                  final isOwnMessage = message['userId'] == currentUserId; // 수정된 부분
+                  return Column(
+                    children: [
+                      Container(
+                        color: isOwnMessage ? Colors.yellow : Colors.transparent,
+                        child: ListTile(
+                          title: Text(message['message']),
+                          subtitle: Text('${message['userName']} - ${message['timestamp']}'),
+                        ),
+                      ),
+                      Divider(height: 1, thickness: 1), // 구분선 추가
+                    ],
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: '메시지를 입력하세요...',
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    if (_messageController.text.isNotEmpty) {
-                      _sendMessage(_messageController.text);
-                    }
-                  },
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.send),
+                    onPressed: () {
+                      if (_messageController.text.isNotEmpty) {
+                        _sendMessage(_messageController.text);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

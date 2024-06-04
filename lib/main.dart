@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'model/BoardModel.dart';
 import 'model/PostModel.dart';
 import 'model/commentModel.dart';
+import 'package:INHATAB/model/profile_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => PostModel()),
         ChangeNotifierProvider(create: (context) => CommentModel()),
 	      ChangeNotifierProvider(create: (_) => ChatModel()),
+        ChangeNotifierProvider(create: (_) => ProfileModel())
       ],
       child: MyApp(),
     ),
