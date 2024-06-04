@@ -1,4 +1,7 @@
+
 import 'package:INHATAB/model/chat_model.dart';
+import 'package:INHATAB/model/profile_model.dart';
+import 'package:INHATAB/model/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:INHATAB/firebase_options.dart';
@@ -7,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'model/BoardModel.dart';
 import 'model/PostModel.dart';
 import 'model/commentModel.dart';
-import 'package:INHATAB/model/profile_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,7 @@ void main() async {
   runApp(
     MultiProvider( //Provider
       providers: [
+        ChangeNotifierProvider(create: (context) => userModel()),
         ChangeNotifierProvider(create: (context) => BoardModel()),
         ChangeNotifierProvider(create: (context) => PostModel()),
         ChangeNotifierProvider(create: (context) => CommentModel()),

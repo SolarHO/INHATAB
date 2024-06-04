@@ -18,8 +18,8 @@ class CommentModel with ChangeNotifier {
 
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
-    // 'yyyy-MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+    // 'MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
+    return DateFormat('MM/dd HH:mm').format(dateTime);
   }
 
   // 댓글을 불러오는 메서드
@@ -34,7 +34,6 @@ class CommentModel with ChangeNotifier {
       // 게시글 작성자 ID를 불러오는 코드 추가
       DataSnapshot writerSnapshot = (await contentsRef.child('uid').once()).snapshot;
       postWriter = writerSnapshot.value as String?;
-      print(postWriter);
 
       DataSnapshot commentsSnapshot = (await commentsRef.once()).snapshot;
 
@@ -174,7 +173,7 @@ class CommentModel with ChangeNotifier {
       });
     } else {
       // 대댓글이 없는 경우, 댓글을 데이터베이스에서 삭제
-      await Ref.remove();
+      await Ref.child('contents').child('comment').child(commentId).remove();
     }
     await Ref.child('commentcount').set(ServerValue.increment(-1));
     notifyListeners();

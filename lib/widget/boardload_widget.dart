@@ -1,3 +1,4 @@
+import 'package:INHATAB/model/userModel.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
   void initState() {
     super.initState();
     scrollController.addListener(_scrollListener);
+    Provider.of<userModel>(context, listen: false).fetchUser();
   }
 
   @override

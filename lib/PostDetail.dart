@@ -1,10 +1,13 @@
 import 'package:INHATAB/model/BoardModel.dart';
 import 'package:INHATAB/model/PostModel.dart';
+import 'package:INHATAB/model/chat_model.dart';
 import 'package:INHATAB/model/commentModel.dart';
+import 'package:INHATAB/model/userModel.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:INHATAB/model/chat_model.dart';
+
 class PostDetailPage extends StatefulWidget {
   final String postId;
 
@@ -20,6 +23,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
   bool _isAnonymous = true; //댓글 익명 여부
   bool _isReplyAnonymous = true; // 대댓글 익명 여부
   String? writerStatus;
+  late final String? userId;
+
   @override
   void initState() {
     super.initState();
@@ -90,47 +95,51 @@ class _PostDetailPageState extends State<PostDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(Provider.of<BoardModel>(context).selectedBoard.toString()),
-        actions: [
-          FutureBuilder(
-            future: SharedPreferences.getInstance(),
-            builder: (context, prefsSnapshot) {
-              if (prefsSnapshot.connectionState == ConnectionState.done &&
-                  prefsSnapshot.hasData) {
-                SharedPreferences prefs = prefsSnapshot.data as SharedPreferences;
-                String? userId = prefs.getString('userId');
-                print('Current User ID: $userId'); // 디버깅 로그 추가
-                return Consumer<PostModel>(
-                  builder: (context, postModel, child) {
-                    if (userId == postModel.writerId) {
-                      return Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              // 삭제 버튼 눌렀을 때 동작
-                              // _showDeleteConfirmationDialog();
-                            },
-                          ),
-                        ],
-                      );
-                    } else if (writerStatus != 'deleted') {
-                      return IconButton(
-                        icon: Icon(Icons.chat),
-                        onPressed: () {
-                          _showChatConfirmationDialog(postModel.writerId!);
-                        },
-                      );
-                    } else {
-                      return SizedBox.shrink();
-                    }
+        actions: <Widget>[
+          Visibility(
+            visible: Provider.of<PostModel>(context).writerId != Provider.of<userModel>(context).getUid(),
+              child: IconButton(
+              icon: Icon(Icons.mail),
+              onPressed: () {
+                String? postUserId = Provider.of<PostModel>(context, listen: false).writerId;
+                _showChatConfirmationDialog(postUserId!);
+              },
+            ),
+          ),
+          Visibility(
+            visible: Provider.of<PostModel>(context).writerId == Provider.of<userModel>(context).getUid(),
+              child: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      content: Text('게시글을 삭제하시겠습니까?'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('취소'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('확인'),
+                          onPressed: () async {
+                            await Provider.of<PostModel>(context, listen: false).deletePost(widget.postId);
+                            Provider.of<BoardModel>(context, listen: false).deletePost(widget.postId);
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
                   },
                 );
-              }
-              return SizedBox.shrink(); // SharedPreferences 로딩 중일 경우 빈 공간 반환
-            },
+              },
+            ),
           ),
-        ],
-
+        ]
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -147,6 +156,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       Text(postModel.timestamp ?? '', style: TextStyle(fontSize: 11)),
                       SizedBox(height: 16),
                       //이미지 영역
+                      if (postModel.imageUrl != null)
+                        Image.network(postModel.imageUrl!),
                       SizedBox(height: 16),
                       Text(postModel.content ?? '', style: TextStyle(fontSize: 18)),
                       Row(
@@ -190,9 +201,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         suffixIcon: IconButton(
                           icon: Icon(Icons.send),
                           onPressed: () {
-                            Provider.of<CommentModel>(context, listen: false).addCommentToDb(_commentController.text, _isAnonymous);
-                            Provider.of<BoardModel>(context, listen: false).incCommentCount(widget.postId);
-                            _commentController.clear();
+                            String commentText = _commentController.text.trim();
+                            if (commentText.isNotEmpty) {
+                              Provider.of<CommentModel>(context, listen: false).addCommentToDb(_commentController.text, _isAnonymous);
+                              Provider.of<BoardModel>(context, listen: false).incCommentCount(widget.postId);
+                              _commentController.clear();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('댓글을 입력해주세요')),
+                              );
+                            }
                           },
                         ),
                       ),
@@ -215,11 +233,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 Text(
                                   commentModel.userNames[index],
                                   style: TextStyle(
+                                    fontSize: 15,
                                     fontWeight: commentModel.userIds[index] != 'unknown' ? FontWeight.bold : null,
                                     color: commentModel.userIds[index] == commentModel.postWriter ? Colors.green : null,
                                   ),
                                 ),
-                                SizedBox(width: 8.0),
+                                SizedBox(width: 4.0),
                                 Text(
                                   commentModel.timestamps[index], // 시간 포맷 변경
                                   style: TextStyle(fontSize: 12.0),
@@ -235,22 +254,25 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   IconButton( //대댓글 추가
                                     icon: Icon(Icons.mode_comment_rounded),
                                     iconSize: 13.0,
+                                    visualDensity: const VisualDensity(horizontal: -4),
                                     onPressed: () {
                                       _showReplyDialog(commentModel.commentIds[index]);
                                     },
                                   ),
                                   IconButton( //쪽지 보내기
-                                    icon: Icon(Icons.send),
+                                    icon: Icon(Icons.mail),
                                     iconSize: 13.0,
+                                    visualDensity: const VisualDensity(horizontal: -4),
                                     onPressed: () {
                                       
                                     },
                                   ),
                                   Visibility( //댓글 삭제
-                                    visible: commentModel.userIds[index] == prefs?.getString('userId'),
+                                    visible: commentModel.userIds[index] == Provider.of<userModel>(context).getUid(),
                                     child: IconButton(
                                       icon: Icon(Icons.delete),
                                       iconSize: 13.0,
+                                      visualDensity: const VisualDensity(horizontal: -4),
                                       onPressed: () {
                                         showDialog(
                                           context: context,
@@ -295,9 +317,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 child: ListTile(
                                   title: Row(
                                     children: [
-                                      Text(commentModel.replies[index][replyIndex]['replyName']!, style: TextStyle(fontWeight: FontWeight.bold,
-                                      color: commentModel.replies[index][replyIndex]['replyuid'] == commentModel.postWriter ? Colors.green : null,)),
-                                      SizedBox(width: 8.0),
+                                      Text(
+                                      commentModel.replies[index][replyIndex]['replyName']!, style: TextStyle(fontWeight: FontWeight.bold,
+                                      fontSize: 15, color: commentModel.replies[index][replyIndex]['replyuid'] == commentModel.postWriter ? Colors.green : null,)),
+                                      SizedBox(width: 4.0),
                                       Text(
                                         commentModel.replies[index][replyIndex]['timestamp']!, // 시간 포맷 변경
                                         style: TextStyle(fontSize: 12.0),
@@ -309,17 +332,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton( //쪽지 보내기
-                                        icon: Icon(Icons.send),
+                                        icon: Icon(Icons.mail),
                                         iconSize: 13.0,
+                                        visualDensity: const VisualDensity(horizontal: -4),
                                         onPressed: () {
                                           
                                         },
                                       ),
                                       Visibility(
-                                        visible: commentModel.replies[index][replyIndex]['replyuid'] == prefs?.getString('userId'),
+                                        visible: commentModel.replies[index][replyIndex]['replyuid'] == Provider.of<userModel>(context).getUid(),
                                         child: IconButton( //대댓글 삭제
                                           icon: Icon(Icons.delete),
                                           iconSize: 13.0,
+                                          visualDensity: const VisualDensity(horizontal: -4),
                                           onPressed: () {
                                             showDialog(
                                               context: context,
@@ -424,12 +449,19 @@ class _ReplyDialogState extends State<ReplyDialog> {
         TextButton(
           child: Text('확인'),
           onPressed: () {
-            Provider.of<CommentModel>(context, listen: false).addReplyToDb(widget.commentId, _commentController.text, _isReplyAnonymous);
-            Provider.of<BoardModel>(context, listen: false).incCommentCount(widget.postId);
-            Provider.of<CommentModel>(context, listen: false).clear();
-            Provider.of<CommentModel>(context, listen: false).fetchComments(widget.postId);
-            _commentController.clear();
-            Navigator.of(context).pop();
+            String replietext = _commentController.text.trim();
+            if(replietext.isNotEmpty) {
+              Provider.of<CommentModel>(context, listen: false).addReplyToDb(widget.commentId, replietext, _isReplyAnonymous);
+              Provider.of<BoardModel>(context, listen: false).incCommentCount(widget.postId);
+              Provider.of<CommentModel>(context, listen: false).clear();
+              Provider.of<CommentModel>(context, listen: false).fetchComments(widget.postId);
+              _commentController.clear();
+              Navigator.of(context).pop();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('대댓글을 입력해주세요')),
+              );
+            }
           },
         ),
       ],

@@ -10,13 +10,18 @@ class PostModel with ChangeNotifier {
   String? writerId; //작성자 Id
   String? writerName; //작성자 이름
   int? likeCount; // 좋아요 수
+  String? imageUrl; //이미지 url
   String? timestamp; // 게시글 작성 시간
   Color? likebtnColor; 
+
+  String? getWriterId() {
+    return writerId;
+  }
 
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
     // 'yyyy-MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+    return DateFormat('yy-MM-dd HH:mm').format(dateTime);
   }
 
   // 게시글 정보를 불러오는 메서드
@@ -50,6 +55,8 @@ class PostModel with ChangeNotifier {
           }
           content = post['contents']['content'];
           likeCount = post['likecount'];
+          imageUrl = post['contents']['imageUrl'];
+          print(imageUrl);
           timestamp = formatTimestamp(post['timestamp']);
           notifyListeners();
         }
@@ -91,6 +98,15 @@ class PostModel with ChangeNotifier {
     }
   }
 
+  //게시글 삭제 메서드
+  Future<void> deletePost(String postId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? selectedBoard = prefs.getString('selectedBoard');
+    DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
+
+    await Ref.remove();
+    notifyListeners();
+  }
 
   Future<String> fetchWriterStatus(String writerId) async { //사용자의 상태확인 (삭제된사용자일경우....)
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(writerId);
@@ -103,7 +119,6 @@ class PostModel with ChangeNotifier {
     Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
     return userData['status'] ?? 'active';
   }
-
 
   // 모델을 초기화하는 메서드
   void clear() {

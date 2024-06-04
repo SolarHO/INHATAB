@@ -17,8 +17,8 @@ class BoardModel with ChangeNotifier {
 
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
-    // 'yyyy-MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+    // 'yy-MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
+    return DateFormat('yy-MM-dd HH:mm').format(dateTime);
   }
 
   Future<void> fetchPosts() async { //게시글 목록 불러오기
@@ -60,7 +60,6 @@ class BoardModel with ChangeNotifier {
 
           lastKey = newLastKey;
 
-
           for (var entry in reversedPosts) {
             String title = entry.value['title']?.toString() ?? '제목 없음';
             String postId = entry.key;
@@ -89,6 +88,7 @@ class BoardModel with ChangeNotifier {
       print("게시글 정보를 가져오는 데 실패했습니다: $error");
     }
   }
+
   Future<String?> _fetchUserName(String userId) async {
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
     DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
@@ -100,7 +100,6 @@ class BoardModel with ChangeNotifier {
     return null;
   }
 
-
   void addPost(String title, String id, String username, int likeCount, int commentCount, String timestamp) { //게시글 추가
     postTitles.add(title);
     postIds.add(id);
@@ -108,6 +107,19 @@ class BoardModel with ChangeNotifier {
     likeCounts.add(likeCount);
     commentCounts.add(commentCount);
     timestamps.add(formatTimestamp(timestamp));
+    notifyListeners();
+  }
+
+  void deletePost(String postId) {
+    int index = postIds.indexOf(postId);
+    if(index != -1) {
+      postTitles.removeAt(index);
+      postIds.removeAt(index);
+      name.removeAt(index);
+      likeCounts.removeAt(index);
+      commentCounts.removeAt(index);
+      timestamps.removeAt(index);
+    }
     notifyListeners();
   }
 

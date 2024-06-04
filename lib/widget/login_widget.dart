@@ -1,8 +1,10 @@
+import 'package:INHATAB/model/userModel.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:INHATAB/model/login_model.dart';
@@ -72,11 +74,11 @@ class _LoginWidgetState extends State<LoginWidget>
     _model.passwordFocusNode ??= FocusNode();
     _checkLoggedInUser();
   }
+
   Future<void> _checkLoggedInUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('userId')) {
       // 사용자 정보가 남아있으면 GoRouter를 사용하여 board 페이지로 이동
-      GoRouter.of(context).go('HomePage');
       GoRouter.of(context).go('/');
     }
   }
@@ -99,16 +101,8 @@ class _LoginWidgetState extends State<LoginWidget>
       // SharedPreferences를 사용하여 사용자 정보 저장
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('userId', userCredential.user!.uid);
-      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
-      DatabaseEvent event = await userRef.child(userCredential.user!.uid).child('name').once();
-      DataSnapshot snapshot = event.snapshot;
-      prefs.setString('userName', snapshot.value as String);
-
-
-
 
       // GoRouter를 사용하여 홈Page로 이동
-      GoRouter.of(context).go('HomePage');
       GoRouter.of(context).go('/');
     } catch (e) {
       // 인증 실패 시 처리

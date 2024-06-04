@@ -160,7 +160,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
                   final message = messages[index];
-                  final isOwnMessage = message['userId'] == currentUserId; // 수정된 부분
+                  final isOwnMessage = message['userId'] == currentUserId;
                   return Column(
                     children: [
                       Container(
@@ -170,7 +170,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           subtitle: Text('${message['userName']} - ${message['timestamp']}'),
                         ),
                       ),
-                      Divider(height: 1, thickness: 1), // 구분선 추가
+                      Divider(height: 1, thickness: 1), 
                     ],
                   );
                 },
