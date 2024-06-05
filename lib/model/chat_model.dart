@@ -136,9 +136,7 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
     }
 
     if (chatRoomExists) {
-      if (existingChatId != null) {
-        await _sendMissingUserMessage(existingChatId);
-      }
+
       _showChatRoomExistsDialog(context);
     } else {
       DatabaseReference newChatRef = chatRef.push();
@@ -165,19 +163,6 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
       _showChatRoomCreatedDialog(context); // 채팅방 생성 다이얼로그 표시
     }
   }
-  Future<void> _sendMissingUserMessage(String? chatId) async {
-    if (chatId == null) return;
-
-    DatabaseReference messagesRef = FirebaseDatabase.instance.reference().child('chat').child(chatId).child('messages');
-    String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-
-    await messagesRef.push().set({
-      'userId': 'system',
-      'userName': '시스템 메시지',
-      'message': '상대방을 찾을 수 없습니다.',
-      'timestamp': formattedTimestamp,
-    });
-  }
 
   Future<String> _fetchUserName(String userId) async {
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
@@ -185,7 +170,7 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
     DataSnapshot snapshot = event.snapshot;
 
     if (snapshot.value == null) {
-      return '탈퇴된 사용자';
+      return '알 수 없음';
     }
 
     Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;

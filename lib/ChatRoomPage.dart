@@ -19,7 +19,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> messages = [];
-  String opponentName = '탈퇴된 사용자'; // 상대방 이름을 저장할 변수
+  String opponentName = '알 수 없음'; // 상대방 이름을 저장할 변수
   String? currentUserId;
   @override
   void initState() {
@@ -62,6 +62,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       }
     }
   }
+
 
   Future<void> _fetchMessages() async {
     DatabaseReference messagesRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId).child('messages');
@@ -121,6 +122,38 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     });
   }
 
+  Future<void> _leaveChat() async {
+    if (currentUserId == null || opponentName == null) return;
+
+    // 상대방에게 "상대방이 채팅방을 나갔습니다" 메시지를 보냄
+    String leaveMessage = "상대방이  채팅방을 나갔습니다.";
+    await _sendMessage(leaveMessage);
+
+    // userChats에서 해당 채팅방 제거
+    DatabaseReference userChatRef = FirebaseDatabase.instance.reference().child('userChats').child(currentUserId!).child(widget.chatId);
+    await userChatRef.remove();
+
+    // chat 노드에서 users 리스트에서 사용자 제거
+    DatabaseReference chatUserRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId).child('users');
+    DatabaseEvent event = await chatUserRef.once();
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.value != null && snapshot.value is Iterable) {
+      List<dynamic> users = List<dynamic>.from(snapshot.value as Iterable); // 수정된 부분
+      users.remove(currentUserId);
+
+      if (users.isEmpty) {
+        // 모두 나간 경우 chatId 노드 삭제
+        DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
+        await chatRef.remove();
+      } else {
+        await chatUserRef.set(users);
+      }
+    }
+
+    // 채팅방에서 나가고 이전 화면으로 돌아감
+    context.go('/Chat');
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -148,7 +181,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               context.go('/Chat');
             },
           ),
-          actions: [],
+
+          actions: [IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: _leaveChat,
+          ),
+          ],
           centerTitle: false,
           elevation: 2,
         ),

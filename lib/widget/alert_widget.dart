@@ -38,6 +38,19 @@ class _AlertWidgetState extends State<AlertWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        appBar: AppBar(
+          title:  Text(
+            '알림',
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+              fontFamily: 'Outfit',
+              color: Colors.white,
+              fontSize: 22,
+              letterSpacing: 0,
+            ),
+          ),
+
+          backgroundColor: Color(0x4C181BF8),
+         ),
         body: SafeArea(
           top: true,
           child: Column(
