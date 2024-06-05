@@ -12,6 +12,7 @@ class userModel with ChangeNotifier {
     DatabaseReference ref = FirebaseDatabase.instance.reference().child('users').child(uid!).child('name');
     DataSnapshot snapshot = (await ref.once()).snapshot;
     name = snapshot.value as String?;
+    await prefs.setString('userName', name!);
   }
 
   String? getName() {
