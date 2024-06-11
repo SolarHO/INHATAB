@@ -80,16 +80,21 @@ class _PostDetailPageState extends State<PostDetailPage> {
       },
     );
   }
-
   Future<void> _startChatWithUser(String postUserId) async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? selectedBoard = prefs.getString('selectedBoard');
+
+      if (selectedBoard == null) {
+        throw Exception('게시판 선택이 안되었습니다.');
+      }
+
       final chatModel = Provider.of<ChatModel>(context, listen: false);
-      await chatModel.startChatWithUser(postUserId, context);
+      await chatModel.startChatWithUser(postUserId, selectedBoard, widget.postId, context);
     } catch (error) {
       print('채팅방 생성 중 오류 발생: $error');
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

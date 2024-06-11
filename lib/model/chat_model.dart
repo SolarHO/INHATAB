@@ -44,7 +44,16 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
         String chatId = value['chatId'];
         String opponentId = await _getOpponentId(chatId, userId);
 
-        String opponentName = await _fetchUserName(opponentId);
+        // 익명 여부 확인
+        DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(chatId);
+        DataSnapshot chatSnapshot = await chatRef.once().then((event) => event.snapshot);
+        bool isAnonymous = false;
+        String opponentName = '알 수 없음';
+        if (chatSnapshot.value != null) {
+          Map<dynamic, dynamic> chatData = chatSnapshot.value as Map<dynamic, dynamic>;
+          isAnonymous = chatData['isAnonymous'] ?? false;
+          opponentName = isAnonymous ? '익명' : await _fetchUserName(opponentId);
+        }
 
         userChatRooms.add({
           'chatId': chatId,
@@ -60,6 +69,7 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
     _chatRooms = userChatRooms;
     notifyListeners();
   }
+
 
   Future<String> _getOpponentId(String chatId, String userId) async {
     try {
@@ -111,11 +121,26 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
 
 
   //사용자와 채팅을 시작하는 메서드
-  Future<void> startChatWithUser(String postUserId, BuildContext context) async {
+  Future<void> startChatWithUser(String postUserId, String selectedBoard, String postId, BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
     if (userId == null) {
       throw Exception('사용자 ID를 찾을 수 없습니다.');
+    }
+
+    // 익명 여부 확인
+    DatabaseReference postRef = FirebaseDatabase.instance.reference()
+        .child('boardinfo')
+        .child('boardstat')
+        .child(selectedBoard)
+        .child(postId);
+
+    DataSnapshot postSnapshot = await postRef.once().then((event) => event.snapshot);
+
+    bool isAnonymous = false;
+    if (postSnapshot.value != null) {
+      Map<dynamic, dynamic> postData = postSnapshot.value as Map<dynamic, dynamic>;
+      isAnonymous = postData['anony'] ?? false;
     }
 
     DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat');
@@ -136,32 +161,53 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
     }
 
     if (chatRoomExists) {
-
       _showChatRoomExistsDialog(context);
     } else {
       DatabaseReference newChatRef = chatRef.push();
       String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
 
+      String opponentName = isAnonymous ? '익명' : await _fetchUserName(postUserId);
+
       await newChatRef.set({
         'users': [userId, postUserId],
         'timestamp': formattedTimestamp,
+        'userNames': {
+          userId: await _fetchUserName(userId),
+          postUserId: opponentName,
+        },
+        'isAnonymous': isAnonymous // 익명 여부 저장
       });
 
       DatabaseReference userChatRef = FirebaseDatabase.instance.reference().child('userChats');
       await userChatRef.child(userId).child(newChatRef.key!).set({
         'chatId': newChatRef.key!,
         'timestamp': formattedTimestamp,
-        'userName': await _fetchUserName(postUserId),
+        'userName': opponentName,
       });
       await userChatRef.child(postUserId).child(newChatRef.key!).set({
         'chatId': newChatRef.key!,
         'timestamp': formattedTimestamp,
-        'userName': await _fetchUserName(userId),
+        'userName': isAnonymous ? '익명' : await _fetchUserName(userId),
       });
-
+      // 알림 저장
+      await _sendNotification(userId, postUserId, "새로운 채팅방이 생성되었습니다.", formattedTimestamp);
       fetchChatRooms(); // 채팅방 목록 업데이트
       _showChatRoomCreatedDialog(context); // 채팅방 생성 다이얼로그 표시
     }
+  }
+
+  Future<void> _sendNotification(String userId, String postUserId, String message, String timestamp) async {
+    DatabaseReference alertRef = FirebaseDatabase.instance.reference().child('alerts');
+
+    await alertRef.child(userId).push().set({
+      'message': message,
+      'timestamp': timestamp,
+    });
+
+    await alertRef.child(postUserId).push().set({
+      'message': message,
+      'timestamp': timestamp,
+    });
   }
 
   Future<String> _fetchUserName(String userId) async {

@@ -21,10 +21,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   List<Map<String, dynamic>> messages = [];
   String opponentName = '알 수 없음'; // 상대방 이름을 저장할 변수
   String? currentUserId;
+  bool isAnonymous = false;
   @override
   void initState() {
     super.initState();
-    _fetchOpponentName();
+    _fetchChatDetails();
     _fetchMessages();
     _getCurrentUserId();
   }
@@ -32,7 +33,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   Future<void> _getCurrentUserId() async {
     currentUserId = await Provider.of<ChatModel>(context, listen: false).getCurrentUserId();
   }
-  Future<void> _fetchOpponentName() async {
+  Future<void> _fetchChatDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
     if (userId == null) {
@@ -40,37 +41,39 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
 
     DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
-    DataSnapshot snapshot = await chatRef.once().then((event) => event.snapshot);
+    chatRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<dynamic, dynamic> chatData = snapshot.value as Map<dynamic, dynamic>;
+        List<dynamic> users = chatData['users'];
+        isAnonymous = chatData['isAnonymous'] ?? false;
 
-    if (snapshot.value != null) {
-      Map<dynamic, dynamic> chatData = snapshot.value as Map<dynamic, dynamic>;
-      List<dynamic> users = chatData['users'];
-
-      for (String user in users) {
-        if (user != userId) {
-          DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(user);
-          DataSnapshot userSnapshot = await userRef.once().then((event) => event.snapshot);
-
-          if (userSnapshot.value != null) {
-            Map<dynamic, dynamic> userData = userSnapshot.value as Map<dynamic, dynamic>;
-            setState(() {
-              opponentName = userData['name'] ?? '익명';
+        for (String user in users) {
+          if (user != userId) {
+            DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(user);
+            userRef.onValue.listen((userEvent) {
+              DataSnapshot userSnapshot = userEvent.snapshot;
+              if (userSnapshot.value != null) {
+                Map<dynamic, dynamic> userData = userSnapshot.value as Map<dynamic, dynamic>;
+                setState(() {
+                  opponentName = isAnonymous ? '익명' : (userData['name'] ?? '익명');
+                });
+              }
             });
+            break;
           }
-          break;
         }
       }
-    }
+    });
   }
-
 
   Future<void> _fetchMessages() async {
     DatabaseReference messagesRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId).child('messages');
     messagesRef.onChildAdded.listen((event) {
       setState(() {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?; // 타입 확인
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
-          messages.add(Map<String, dynamic>.from(data)); // 타입 변환
+          messages.add(Map<String, dynamic>.from(data));
         }
       });
       _scrollToBottom();
@@ -84,14 +87,24 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       throw Exception('사용자 ID를 찾을 수 없습니다.');
     }
 
-    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
-    DatabaseEvent event = await userRef.once();
-    DataSnapshot userSnapshot = event.snapshot;
+    DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
+    DataSnapshot snapshot = await chatRef.once().then((event) => event.snapshot);
 
-    String userName = '익명';  // 기본 값 설정
-    if (userSnapshot.value != null) {
-      Map<dynamic, dynamic> userData = userSnapshot.value as Map<dynamic, dynamic>;
-      userName = userData['name'] ?? '익명';
+    String userName = '익명';
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> chatData = snapshot.value as Map<dynamic, dynamic>;
+      bool isAnonymous = chatData['isAnonymous'] ?? false;
+
+      if (!isAnonymous) {
+        DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
+        DatabaseEvent event = await userRef.once();
+        DataSnapshot userSnapshot = event.snapshot;
+
+        if (userSnapshot.value != null) {
+          Map<dynamic, dynamic> userData = userSnapshot.value as Map<dynamic, dynamic>;
+          userName = userData['name'] ?? '익명';
+        }
+      }
     }
 
     DatabaseReference messagesRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId).child('messages');
@@ -109,7 +122,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
     _messageController.clear();
   }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
