@@ -15,7 +15,8 @@ class CommentModel with ChangeNotifier {
   List<String> timestamps = []; // 댓글 작성 시간
   List<List<Map<String, String>>> replies = []; // 대댓글
   Map<String, int> anonymousCounts = {}; //사용자의 익명 댓글 수를 저장하는 맵
-
+  List<bool> isAnonymous = []; // 익명 여부 저장
+  int globalAnonymousCount = 1; // 전역 익명 카운트
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
     // 'MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
@@ -36,6 +37,9 @@ class CommentModel with ChangeNotifier {
       postWriter = writerSnapshot.value as String?;
 
       DataSnapshot commentsSnapshot = (await commentsRef.once()).snapshot;
+
+      anonymousCounts.clear(); // 댓글 불러올 때 익명 카운트 초기화
+      globalAnonymousCount = 1; // 전역 익명 카운트 초기화
 
       if (commentsSnapshot.value != null) {
         Map<dynamic, dynamic>? comments = commentsSnapshot.value as Map<dynamic, dynamic>?;
@@ -97,12 +101,12 @@ class CommentModel with ChangeNotifier {
       return '익명(작성자)';
     } else {
       if (!anonymousCounts.containsKey(userId)) {
-        anonymousCounts[userId] = 1;
+        anonymousCounts[userId] = globalAnonymousCount++;
       }
       return '익명${anonymousCounts[userId]}';
     }
   }
-  
+
   //댓글 작성 메서드
   Future<void> addCommentToDb(String commentContent, bool isAnonymous) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -154,6 +158,7 @@ class CommentModel with ChangeNotifier {
     commentContents.add(commentContent);
     timestamps.add(formatTimestamp(timestamp));
     replies.add(replyList);
+    this.isAnonymous.add(isAnonymous); // 익명 여부 저장
     notifyListeners();
   }
 

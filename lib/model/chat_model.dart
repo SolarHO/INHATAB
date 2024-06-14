@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:go_router/go_router.dart';
 
 class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
   final unfocusNode = FocusNode();
@@ -128,6 +129,16 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
       throw Exception('사용자 ID를 찾을 수 없습니다.');
     }
 
+
+
+    // 사용자 탈퇴 상태 확인
+    DatabaseReference postUserRef = FirebaseDatabase.instance.reference().child('users').child(postUserId);
+    DataSnapshot postUserSnapshot = await postUserRef.once().then((event) => event.snapshot);
+
+    if (postUserSnapshot.value == null || (postUserSnapshot.value as Map<dynamic, dynamic>)['status'] == 'deleted') {
+      _showUserDeletedDialog(context);
+      return;
+    }
     // 익명 여부 확인
     DatabaseReference postRef = FirebaseDatabase.instance.reference()
         .child('boardinfo')
@@ -209,6 +220,90 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
       'timestamp': timestamp,
     });
   }
+  void _showUserDeletedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('사용자 탈퇴'),
+          content: Text('해당 사용자는 탈퇴하였습니다. 채팅방을 생성할 수 없습니다.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> startChatFromComment(String commentUserId, String postId, BuildContext context, bool isAnonymous) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('userId');
+    if (userId == null) {
+      throw Exception('사용자 ID를 찾을 수 없습니다.');
+    }
+
+    DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat');
+    DatabaseEvent event = await chatRef.once();
+    DataSnapshot snapshot = event.snapshot;
+    bool chatRoomExists = false;
+    String? existingChatId;
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> chatRooms = snapshot.value as Map<dynamic, dynamic>;
+      chatRooms.forEach((key, value) {
+        List<dynamic> users = value['users'];
+        if (users.contains(userId) && users.contains(commentUserId)) {
+          chatRoomExists = true;
+          existingChatId = key;
+        }
+      });
+    }
+
+    if (chatRoomExists) {
+      _showChatRoomExistsDialog(context);
+    } else {
+      DatabaseReference newChatRef = chatRef.push();
+      String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+      String opponentName = isAnonymous ? '익명' : await _fetchUserName(commentUserId);
+
+      await newChatRef.set({
+        'users': [userId, commentUserId],
+        'timestamp': formattedTimestamp,
+        'userNames': {
+          userId: await _fetchUserName(userId),
+          commentUserId: opponentName,
+        },
+        'isAnonymous': isAnonymous // 익명 여부 저장
+      });
+
+      DatabaseReference userChatRef = FirebaseDatabase.instance.reference().child('userChats');
+      await userChatRef.child(userId).child(newChatRef.key!).set({
+        'chatId': newChatRef.key!,
+        'timestamp': formattedTimestamp,
+        'userName': opponentName,
+      });
+      await userChatRef.child(commentUserId).child(newChatRef.key!).set({
+        'chatId': newChatRef.key!,
+        'timestamp': formattedTimestamp,
+        'userName': await _fetchUserName(userId),
+      });
+
+      // 알림 저장
+      await _sendNotification(userId, commentUserId, "댓글에서 새로운 채팅방이 생성되었습니다.", formattedTimestamp);
+
+      fetchChatRooms(); // 채팅방 목록 업데이트
+      _showChatRoomCreatedDialog(context); // 채팅방 생성 다이얼로그 표시
+    }
+  }
+
+
+
 
   Future<String> _fetchUserName(String userId) async {
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
@@ -254,6 +349,7 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
+                context.go('/chat');
               },
               child: Text('확인'),
             ),

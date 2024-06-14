@@ -95,6 +95,79 @@ class _PostDetailPageState extends State<PostDetailPage> {
       print('채팅방 생성 중 오류 발생: $error');
     }
   }
+  void _showCommentChatDialog(String commentUserId, bool isAnonymous) {
+    print("Comment User ID: $commentUserId, Is Anonymous: $isAnonymous"); // 디버깅 정보 추가
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('채팅하기'),
+          content: Text('댓글 작성자와 채팅하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startChatWithCommentUser(commentUserId, isAnonymous);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showReplyChatDialog(String replyUserId, bool isAnonymous) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('채팅하기'),
+          content: Text('대댓글 작성자와 채팅하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startChatWithReplyUser(replyUserId, isAnonymous);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Future<void> _startChatWithCommentUser(String commentUserId, bool isAnonymous) async {
+    try {
+      final chatModel = Provider.of<ChatModel>(context, listen: false);
+      await chatModel.startChatFromComment(commentUserId, widget.postId, context, isAnonymous);
+    } catch (error) {
+      print('채팅방 생성 중 오류 발생: $error');
+    }
+  }
+
+  Future<void> _startChatWithReplyUser(String replyUserId, bool isAnonymous) async {
+    try {
+      final chatModel = Provider.of<ChatModel>(context, listen: false);
+      await chatModel.startChatFromComment(replyUserId, widget.postId, context, isAnonymous);
+    } catch (error) {
+      print('채팅방 생성 중 오류 발생: $error');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,6 +302,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     shrinkWrap: true,
                     itemCount: commentModel.commentContents.length,
                     itemBuilder: (context, index) {
+                      // 디버깅 로그 추가
+                      print("댓글 인덱스: $index, 전체 댓글 수: ${commentModel.commentContents.length}");
+                      print("익명 여부 인덱스: $index, 익명 여부 배열 크기: ${commentModel.isAnonymous.length}");
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -269,7 +345,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     iconSize: 13.0,
                                     visualDensity: const VisualDensity(horizontal: -4),
                                     onPressed: () {
-                                      
+                                      if (index < commentModel.userIds.length && index < commentModel.isAnonymous.length) {
+                                        print("Comment User ID: ${commentModel.userIds[index]}, Is Anonymous: ${commentModel.isAnonymous[index]}");
+                                        _showCommentChatDialog(commentModel.userIds[index], commentModel.isAnonymous[index]);
+                                      } else {
+                                        print("Index out of range: $index");
+                                      }
+
+
                                     },
                                   ),
                                   Visibility( //댓글 삭제
@@ -341,7 +424,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                         iconSize: 13.0,
                                         visualDensity: const VisualDensity(horizontal: -4),
                                         onPressed: () {
-                                          
+                                          if (index < commentModel.replies.length && replyIndex < commentModel.replies[index].length) {
+                                            print("Reply User ID: ${commentModel.replies[index][replyIndex]['replyuid']}, Is Anonymous: ${commentModel.replies[index][replyIndex]['replyName'] == '익명'}");
+                                            _showReplyChatDialog(commentModel.replies[index][replyIndex]['replyuid']!, commentModel.replies[index][replyIndex]['replyName'] == '익명');
+                                          } else {
+                                            print("Index out of range: $index, ReplyIndex: $replyIndex");
+                                          }
                                         },
                                       ),
                                       Visibility(
