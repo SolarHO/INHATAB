@@ -123,6 +123,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
+
   void _showReplyChatDialog(String replyUserId, bool isAnonymous) {
     showDialog(
       context: context,
