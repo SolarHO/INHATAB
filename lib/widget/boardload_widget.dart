@@ -40,7 +40,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
     }
   }
 
-  void showSearchDialog(BuildContext context) {
+  void showSearchDialog(BuildContext context) { //검색다이어로그
     showDialog(
       context: context,
       builder: (context) {

@@ -31,7 +31,7 @@ class BoardModel with ChangeNotifier {
     if (selectedBoard == null) {
       throw Exception('게시판을 선택하지 않았습니다.');
     }
-    searchQuery = query; // 검색어 저장
+    searchQuery = query; // 검색어  저장
     try {
       DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!);
       Query dbQuery = postRef.orderByKey();
