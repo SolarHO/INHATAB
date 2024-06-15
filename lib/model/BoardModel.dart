@@ -14,6 +14,10 @@ class BoardModel with ChangeNotifier {
   String? lastKey; //마지막으로 불러온 글 키 값
   int limit = 20; //한번에 불러오는 글 제한
   FocusNode unfocusNode = FocusNode(); // unfocusNode 추가
+  String? searchQuery; // 검색어
+
+
+
 
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
@@ -21,26 +25,26 @@ class BoardModel with ChangeNotifier {
     return DateFormat('yy-MM-dd HH:mm').format(dateTime);
   }
 
-  Future<void> fetchPosts() async { //게시글 목록 불러오기
+  Future<void> fetchPosts({String? query}) async { //게시글 목록 불러오기
     SharedPreferences prefs = await SharedPreferences.getInstance();
     selectedBoard = prefs.getString('selectedBoard');
     if (selectedBoard == null) {
       throw Exception('게시판을 선택하지 않았습니다.');
     }
+    searchQuery = query; // 검색어 저장
     try {
-      DatabaseReference postRef = FirebaseDatabase.instance.reference().child(
-          'boardinfo').child('boardstat').child(selectedBoard!);
-      Query query = postRef.orderByKey();
+      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!);
+      Query dbQuery = postRef.orderByKey();
 
       // _lastKey가 있으면 _lastKey 이전의 게시글을 불러옴
       if (lastKey != null) {
-        query = query.endBefore(lastKey);
+        dbQuery = dbQuery.endBefore(lastKey);
       }
 
       // 가장 최근의 _limit개의 게시글을 불러옴
-      query = query.limitToLast(limit);
+      dbQuery = dbQuery.limitToLast(limit);
 
-      DatabaseEvent event = await query.once();
+      DatabaseEvent event = await dbQuery.once();
       DataSnapshot snapshot = event.snapshot;
 
       if (snapshot.value != null) {
@@ -53,12 +57,20 @@ class BoardModel with ChangeNotifier {
           // _lastKey 업데이트
           String newLastKey = reversedPosts.last.key;
 
-          //처음 작성된 게시글을 불러왔으면 새로고침 중단 
+          // 처음 작성된 게시글을 불러왔으면 새로고침 중단
           if (lastKey == newLastKey) {
             return;
           }
 
           lastKey = newLastKey;
+
+          // 검색어가 있는 경우, 해당하는 게시글만 필터링
+          if (searchQuery != null && searchQuery!.isNotEmpty) {
+            reversedPosts = reversedPosts.where((entry) {
+              String title = entry.value['title']?.toString() ?? '';
+              return title.contains(searchQuery!);
+            }).toList();
+          }
 
           for (var entry in reversedPosts) {
             String title = entry.value['title']?.toString() ?? '제목 없음';
@@ -150,6 +162,13 @@ class BoardModel with ChangeNotifier {
       commentCounts[index] --;
       notifyListeners();
     }
+  }
+
+
+  void clearSearch() {
+    searchQuery = null;
+    clear();
+    fetchPosts(); // 검색어를 초기화한 후 게시글 다시 불러오기
   }
 
   void clear() {

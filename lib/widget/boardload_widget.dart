@@ -17,6 +17,7 @@ class BoardloadWidget extends StatefulWidget {
 class _BoardloadWidgetState extends State<BoardloadWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final scrollController = ScrollController();
+  final TextEditingController searchController = TextEditingController(); //검색컨트롤러
 
   @override
   void initState() {
@@ -38,6 +39,47 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
           Provider.of<BoardModel>(context, listen: false).fetchPosts(); // 스크롤이 최하단에 도달하면 게시글 불러오기
     }
   }
+
+  void showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('검색'),
+          content: TextField(
+            controller: searchController,
+            decoration: InputDecoration(
+              hintText: '검색어를 입력하세요',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                String query = searchController.text.trim();
+                if (query.isNotEmpty) {
+                  Provider.of<BoardModel>(context, listen: false).clear();
+                  Provider.of<BoardModel>(context, listen: false).fetchPosts(query: query);
+                }
+                Navigator.pop(context);
+              },
+              child: Text('검색'),
+            ),
+            TextButton(
+              onPressed: () {
+                searchController.clear();
+                Provider.of<BoardModel>(context, listen: false).clearSearch();
+                Navigator.pop(context);
+              },
+              child: Text('취소'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +112,14 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                 },
               ),
               actions: [
+
+            IconButton(
+            icon: Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              showSearchDialog(context);
+
+            },
+          ),
                 Container(
                   margin: EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
