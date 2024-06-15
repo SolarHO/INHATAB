@@ -377,52 +377,50 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             ],
                           ),
                           subtitle: Text(commentModel.commentContents[index]),
-                          trailing: Visibility(
-                            visible: commentModel.userIds[index] != 'unknown',
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  //대댓글 추가
-                                  icon: Icon(Icons.mode_comment_rounded),
-                                  iconSize: 13.0,
-                                  visualDensity:
-                                      const VisualDensity(horizontal: -4),
-                                  onPressed: () {
-                                    _showReplyDialog(
-                                        commentModel.commentIds[index]);
-                                  },
-                                ),
-                                IconButton(
-                                  //쪽지 보내기
-                                  icon: Icon(Icons.mail),
-                                  iconSize: 13.0,
-                                  visualDensity:
-                                      const VisualDensity(horizontal: -4),
-                                  onPressed: () {
-                                    if (index < commentModel.userIds.length &&
-                                        index <
-                                            commentModel.isAnonymous.length) {
-                                      print(
-                                          "Comment User ID: ${commentModel.userIds[index]}, Is Anonymous: ${commentModel.isAnonymous[index]}");
-                                      _showCommentChatDialog(
-                                          commentModel.userIds[index],
-                                          commentModel.isAnonymous[index]);
-                                    } else {
-                                      print("Index out of range: $index");
-                                    }
-                                  },
-                                ),
-                                Visibility(
-                                  //댓글 삭제
-                                  visible: commentModel.userIds[index] ==
-                                      Provider.of<userModel>(context).getUid(),
-                                  child: IconButton(
-                                    icon: Icon(Icons.delete),
-                                    iconSize: 13.0,
-                                    visualDensity:
-                                        const VisualDensity(horizontal: -4),
-                                    onPressed: () {
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Visibility(
+                                visible: commentModel.userIds[index] ==
+                                        Provider.of<userModel>(context)
+                                            .getUid() &&
+                                    commentModel.userIds[index] != 'unknown',
+                                child: PopupMenuButton<int>(
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    size: 16,
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 1,
+                                      child: Text("대댓글 추가"),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 2,
+                                      child: Text("쪽지 보내기"),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 3,
+                                      child: Text("댓글 삭제"),
+                                    ),
+                                  ],
+                                  onSelected: (value) {
+                                    if (value == 1) {
+                                      _showReplyDialog(
+                                          commentModel.commentIds[index]);
+                                    } else if (value == 2) {
+                                      if (index < commentModel.userIds.length &&
+                                          index <
+                                              commentModel.isAnonymous.length) {
+                                        print(
+                                            "Comment User ID: ${commentModel.userIds[index]}, Is Anonymous: ${commentModel.isAnonymous[index]}");
+                                        _showCommentChatDialog(
+                                            commentModel.userIds[index],
+                                            commentModel.isAnonymous[index]);
+                                      } else {
+                                        print("Index out of range: $index");
+                                      }
+                                    } else if (value == 3) {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
@@ -467,11 +465,51 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                           );
                                         },
                                       );
-                                    },
-                                  ),
+                                    }
+                                  },
                                 ),
-                              ],
-                            ),
+                              ),
+                              Visibility(
+                                visible: commentModel.userIds[index] !=
+                                        Provider.of<userModel>(context)
+                                            .getUid() &&
+                                    commentModel.userIds[index] != 'unknown',
+                                child: PopupMenuButton<int>(
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    size: 16,
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 1,
+                                      child: Text("대댓글 추가"),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 2,
+                                      child: Text("쪽지 보내기"),
+                                    ),
+                                  ],
+                                  onSelected: (value) {
+                                    if (value == 1) {
+                                      _showReplyDialog(
+                                          commentModel.commentIds[index]);
+                                    } else if (value == 2) {
+                                      if (index < commentModel.userIds.length &&
+                                          index <
+                                              commentModel.isAnonymous.length) {
+                                        print(
+                                            "Comment User ID: ${commentModel.userIds[index]}, Is Anonymous: ${commentModel.isAnonymous[index]}");
+                                        _showCommentChatDialog(
+                                            commentModel.userIds[index],
+                                            commentModel.isAnonymous[index]);
+                                      } else {
+                                        print("Index out of range: $index");
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         ListView.builder(
@@ -510,96 +548,143 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    IconButton(
-                                      //쪽지 보내기
-                                      icon: Icon(Icons.mail),
-                                      iconSize: 13.0,
-                                      visualDensity:
-                                          const VisualDensity(horizontal: -4),
-                                      onPressed: () {
-                                        if (index <
-                                                commentModel.replies.length &&
-                                            replyIndex <
-                                                commentModel
-                                                    .replies[index].length) {
-                                          print(
-                                              "Reply User ID: ${commentModel.replies[index][replyIndex]['replyuid']}, Is Anonymous: ${commentModel.replies[index][replyIndex]['replyName'] == '익명'}");
-                                          _showReplyChatDialog(
-                                              commentModel.replies[index]
-                                                  [replyIndex]['replyuid']!,
-                                              commentModel.replies[index]
-                                                          [replyIndex]
-                                                      ['replyName'] ==
-                                                  '익명');
-                                        } else {
-                                          print(
-                                              "Index out of range: $index, ReplyIndex: $replyIndex");
-                                        }
-                                      },
+                                    Visibility(
+                                      visible: commentModel.replies[index]
+                                              [replyIndex]['replyuid'] !=
+                                          Provider.of<userModel>(context)
+                                              .getUid(),
+                                      child: PopupMenuButton<int>(
+                                        icon: Icon(
+                                          Icons.more_vert,
+                                          size: 16,
+                                        ),
+                                        itemBuilder: (context) => [
+                                          PopupMenuItem(
+                                            value: 1,
+                                            child: Text("쪽지 보내기"),
+                                          ),
+                                        ],
+                                        onSelected: (value) {
+                                          if (value == 1) {
+                                            if (index <
+                                                    commentModel
+                                                        .replies.length &&
+                                                replyIndex <
+                                                    commentModel.replies[index]
+                                                        .length) {
+                                              print(
+                                                  "Reply User ID: ${commentModel.replies[index][replyIndex]['replyuid']}, Is Anonymous: ${commentModel.replies[index][replyIndex]['replyName'] == '익명'}");
+                                              _showReplyChatDialog(
+                                                  commentModel.replies[index]
+                                                      [replyIndex]['replyuid']!,
+                                                  commentModel.replies[index]
+                                                              [replyIndex]
+                                                          ['replyName'] ==
+                                                      '익명');
+                                            } else {
+                                              print(
+                                                  "Index out of range: $index, ReplyIndex: $replyIndex");
+                                            }
+                                          }
+                                        },
+                                      ),
                                     ),
                                     Visibility(
                                       visible: commentModel.replies[index]
                                               [replyIndex]['replyuid'] ==
                                           Provider.of<userModel>(context)
                                               .getUid(),
-                                      child: IconButton(
-                                        //대댓글 삭제
-                                        icon: Icon(Icons.delete),
-                                        iconSize: 13.0,
-                                        visualDensity:
-                                            const VisualDensity(horizontal: -4),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                content: Text('대댓글을 삭제하시겠습니까?'),
-                                                actions: <Widget>[
-                                                  TextButton(
-                                                    child: Text('취소'),
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                  ),
-                                                  TextButton(
-                                                    child: Text('확인'),
-                                                    onPressed: () async {
-                                                      await Provider.of<
-                                                                  CommentModel>(
-                                                              context,
-                                                              listen: false)
-                                                          .deleteReplies(
-                                                              commentModel
-                                                                      .commentIds[
-                                                                  index],
-                                                              commentModel.replies[
-                                                                          index]
-                                                                      [
-                                                                      replyIndex]
-                                                                  ['replyId']!);
-                                                      Provider.of<BoardModel>(
-                                                              context,
-                                                              listen: false)
-                                                          .decCommentCount(
-                                                              widget.postId);
-                                                      Provider.of<CommentModel>(
-                                                              context,
-                                                              listen: false)
-                                                          .clear();
-                                                      Provider.of<CommentModel>(
-                                                              context,
-                                                              listen: false)
-                                                          .fetchComments(
-                                                              widget.postId);
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          );
+                                      child: PopupMenuButton<int>(
+                                        icon: Icon(
+                                          Icons.more_vert,
+                                          size: 16,
+                                        ),
+                                        itemBuilder: (context) => [
+                                          PopupMenuItem(
+                                            value: 1,
+                                            child: Text("쪽지 보내기"),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 2,
+                                            child: Text("대댓글 삭제"),
+                                          )
+                                        ],
+                                        onSelected: (value) {
+                                          if (value == 1) {
+                                            if (index <
+                                                    commentModel
+                                                        .replies.length &&
+                                                replyIndex <
+                                                    commentModel.replies[index]
+                                                        .length) {
+                                              print(
+                                                  "Reply User ID: ${commentModel.replies[index][replyIndex]['replyuid']}, Is Anonymous: ${commentModel.replies[index][replyIndex]['replyName'] == '익명'}");
+                                              _showReplyChatDialog(
+                                                  commentModel.replies[index]
+                                                      [replyIndex]['replyuid']!,
+                                                  commentModel.replies[index]
+                                                              [replyIndex]
+                                                          ['replyName'] ==
+                                                      '익명');
+                                            } else {
+                                              print(
+                                                  "Index out of range: $index, ReplyIndex: $replyIndex");
+                                            }
+                                          } else if (value == 2) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  content:
+                                                      Text('대댓글을 삭제하시겠습니까?'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      child: Text('취소'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: Text('확인'),
+                                                      onPressed: () async {
+                                                        await Provider.of<
+                                                                    CommentModel>(
+                                                                context,
+                                                                listen: false)
+                                                            .deleteReplies(
+                                                                commentModel
+                                                                        .commentIds[
+                                                                    index],
+                                                                commentModel
+                                                                            .replies[index]
+                                                                        [
+                                                                        replyIndex]
+                                                                    [
+                                                                    'replyId']!);
+                                                        Provider.of<BoardModel>(
+                                                                context,
+                                                                listen: false)
+                                                            .decCommentCount(
+                                                                widget.postId);
+                                                        Provider.of<CommentModel>(
+                                                                context,
+                                                                listen: false)
+                                                            .clear();
+                                                        Provider.of<CommentModel>(
+                                                                context,
+                                                                listen: false)
+                                                            .fetchComments(
+                                                                widget.postId);
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }
                                         },
                                       ),
                                     ),
