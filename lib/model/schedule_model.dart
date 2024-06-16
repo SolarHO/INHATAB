@@ -32,6 +32,7 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
           'startTime': DateTime.now().toIso8601String(),
           'endTime': DateTime.now().toIso8601String(),
           'location': '',
+          'color': 0xFFFFFFFF,
         });
       }
 
@@ -42,8 +43,9 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
         var startTime = task['startTime'];
         var endTime = task['endTime'];
         var location = task['location'];
+        var color = task['color'].value;
 
-        // 시간표 정보를 저장합니다.
+        // 시간표 정보를 저장
         await databaseReference.child('tasks/${user!.uid}').push().set({
           'className': className,
           'professorName': professorName,
@@ -51,6 +53,7 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
           'startTime': startTime.toIso8601String(),
           'endTime': endTime.toIso8601String(),
           'location': location,
+          'color' : color,
         });
       }
     } else {
@@ -67,6 +70,7 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
       var startTime = task['startTime'];
       var endTime = task['endTime'];
       var location = task['location'];
+      var color = task['color'].value;
 
       if (user != null) {
         await databaseReference.child('tasks/${user!.uid}/$key').set({
@@ -76,6 +80,7 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
           'startTime': startTime.toIso8601String(),
           'endTime': endTime.toIso8601String(),
           'location': location,
+          'color' : color,
         });
       } else {
         print('알 수 없는 오류가 발생되었습니다.'); // 로그인 되어 있지 않는 경우 에러메시지
@@ -117,12 +122,15 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
       var className = value['className'];
       var professorName = value['professorName'];
       var day = value['day'];
-      var startTime = DateTime.parse(value['startTime']);
-      var endTime = DateTime.parse(value['endTime']);
+      var startTime = DateTime.parse(value['startTime']).add(Duration(hours: 1));
+      var endTime = DateTime.parse(value['endTime']).add(Duration(hours: 1));
       var location = value['location'];
+      var colorValue = value['color'] ?? 0xFFFFFFFF; // 색상 정보가 null인 경우 기본 색상을 사용
+      var hexColor = colorValue.toRadixString(16).padLeft(8, '0'); // int 값을 16진수 문자열로 변환
+      var color = Color(int.parse(hexColor, radix: 16));
 
       var newTask = TimePlannerTask(
-        color: Colors.blue, //시간표 셀 색상
+        color: color, //시간표 셀 색상
         dateTime: TimePlannerDateTime(
           day: _convertDayToIndex(day),
           hour: startTime.hour,
@@ -141,9 +149,10 @@ class ScheduleModel extends FlutterFlowModel<ScheduleWidget> {
                 className: className,
                 professorName: professorName,
                 day: day,
-                startTime: startTime,
-                endTime: endTime,
+                startTime: startTime.add(Duration(hours: -1)),
+                endTime: endTime.add(Duration(hours: -1)),
                 location: location,
+                color: color,
               );
             },
           ).then((_) {

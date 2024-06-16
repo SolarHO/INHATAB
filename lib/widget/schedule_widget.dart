@@ -111,8 +111,9 @@ class _ScheduleWidgetState extends State<ScheduleWidget> {
               ],
               style: TimePlannerStyle(
                 cellWidth: cellWidth.toInt(),
-                cellHeight: 60,
+                cellHeight: 45,
                 showScrollBar: false,
+                borderRadius: const BorderRadius.all(Radius.circular(5))
               ),
               tasks: tasks, // 여기에 작업 목록을 넣으세요.
             );
@@ -135,6 +136,16 @@ class TaskInputBottomSheet extends StatefulWidget {
 class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
   //시간표 저장 바텀시트 위젯
   List<Map<String, dynamic>> tasks = [];
+  final List<Color> colors = [
+    Color(0xff8377D1),
+    Color(0xff3C91E6),
+    Color(0xff3AAFB9),
+    Color(0xffC0BABC),
+    Color(0xffADE25D),
+    Color(0xffff858d),
+    Color(0xffE6AF2E),
+    Color(0xff435058),
+  ];
 
   @override
   void initState() {
@@ -150,6 +161,7 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
         'startTime': DateTime(now.year, now.month, now.day, 9, 0),
         'endTime': DateTime(now.year, now.month, now.day, 10, 0),
         'location': '',
+        'color' : colors[0],
       });
     } else {
       tasks = List<Map<String, dynamic>>.from(widget.initialTasks); // 초기 시간표 정보를 사용하여 상태를 설정합니다.
@@ -226,6 +238,22 @@ class _TaskInputBottomSheetState extends State<TaskInputBottomSheet> {
                     ),
                   ],
                 ),
+                Row(
+                  children: colors.map((color) {
+                    return GestureDetector(
+                      onTap: () => setState(() => tasks[index]['color'] = color),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: color,
+                          border: tasks[index]['color'] == color ? Border.all(width: 2, color: Colors.black) : null, // 선택된 색상에 대한 테두리를 추가합니다.
+                        ),
+                        child: tasks[index]['color'] == color ? Icon(Icons.check, size: 20) : null, // 선택된 색상에 체크 아이콘을 추가합니다.
+                      ),
+                    );
+                  }).toList(),
+                ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: TextField(
@@ -283,6 +311,7 @@ class TaskBottomSheet extends StatefulWidget {
   final DateTime startTime;
   final DateTime endTime;
   final String location;
+  final Color color;
 
   TaskBottomSheet({
     required this.model,
@@ -293,6 +322,7 @@ class TaskBottomSheet extends StatefulWidget {
     required this.startTime,
     required this.endTime,
     required this.location,
+    required this.color,
   });
 
   @override
@@ -358,6 +388,7 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
                       'startTime': widget.startTime,
                       'endTime': widget.endTime,
                       'location': widget.location,
+                      'color' : widget.color,
                     }],
                   ),
                 ),
