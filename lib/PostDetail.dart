@@ -398,10 +398,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     ),
                                     PopupMenuItem(
                                       value: 2,
-                                      child: Text("쪽지 보내기"),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 3,
                                       child: Text("댓글 삭제"),
                                     ),
                                   ],
@@ -410,18 +406,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                       _showReplyDialog(
                                           commentModel.commentIds[index]);
                                     } else if (value == 2) {
-                                      if (index < commentModel.userIds.length &&
-                                          index <
-                                              commentModel.isAnonymous.length) {
-                                        print(
-                                            "Comment User ID: ${commentModel.userIds[index]}, Is Anonymous: ${commentModel.isAnonymous[index]}");
-                                        _showCommentChatDialog(
-                                            commentModel.userIds[index],
-                                            commentModel.isAnonymous[index]);
-                                      } else {
-                                        print("Index out of range: $index");
-                                      }
-                                    } else if (value == 3) {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
@@ -603,35 +587,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                         itemBuilder: (context) => [
                                           PopupMenuItem(
                                             value: 1,
-                                            child: Text("쪽지 보내기"),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 2,
                                             child: Text("대댓글 삭제"),
                                           )
                                         ],
                                         onSelected: (value) {
                                           if (value == 1) {
-                                            if (index <
-                                                    commentModel
-                                                        .replies.length &&
-                                                replyIndex <
-                                                    commentModel.replies[index]
-                                                        .length) {
-                                              print(
-                                                  "Reply User ID: ${commentModel.replies[index][replyIndex]['replyuid']}, Is Anonymous: ${commentModel.replies[index][replyIndex]['replyName'] == '익명'}");
-                                              _showReplyChatDialog(
-                                                  commentModel.replies[index]
-                                                      [replyIndex]['replyuid']!,
-                                                  commentModel.replies[index]
-                                                              [replyIndex]
-                                                          ['replyName'] ==
-                                                      '익명');
-                                            } else {
-                                              print(
-                                                  "Index out of range: $index, ReplyIndex: $replyIndex");
-                                            }
-                                          } else if (value == 2) {
                                             showDialog(
                                               context: context,
                                               builder: (BuildContext context) {
