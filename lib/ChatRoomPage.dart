@@ -120,7 +120,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     // 최신 메시지 시간 갱신
     Provider.of<ChatModel>(context, listen: false).updateLatestMessageTime(widget.chatId);
 
+    String toUserId = await _getOpponentUserId(userId, widget.chatId);
+    String notificationMessage = isAnonymous ? '익명님이 채팅을 보냈습니다.' : '$userName님이 채팅을 보냈습니다. '; // 채팅시 알림
+    await Provider.of<ChatModel>(context, listen: false).sendChatNotification(userId, toUserId, notificationMessage, message);
     _messageController.clear();
+  }
+
+  Future<String> _getOpponentUserId(String currentUserId, String chatId) async {
+    DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(chatId);
+    DataSnapshot snapshot = await chatRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> chatData = snapshot.value as Map<dynamic, dynamic>;
+      List<dynamic> users = chatData['users'];
+      for (String userId in users) {
+        if (userId != currentUserId) {
+          return userId;
+        }
+      }
+    }
+    throw Exception('상대방 ID를 찾을 수 없습니다.');
   }
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
