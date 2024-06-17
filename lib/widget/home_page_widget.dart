@@ -1,7 +1,11 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart'
+    as smooth_page_indicator;
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../model/home_page_model.dart';
 export '../model/home_page_model.dart';
 
@@ -11,8 +15,6 @@ class HomePageWidget extends StatefulWidget {
   @override
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
-
-
 
 class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
@@ -86,174 +88,248 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         ),
         body: SafeArea(
           top: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                flex: 6,
-                child: Container(
-                  width: MediaQuery.sizeOf(context).width,
-                  height: MediaQuery.sizeOf(context).height * 1,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: 200,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        FlutterFlowTheme.of(context).alternate,
-                        FlutterFlowTheme.of(context).secondaryText
-                      ],
-                      stops: [0, 1],
-                      begin: AlignmentDirectional(0.87, -1),
-                      end: AlignmentDirectional(-0.87, 1),
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(0),
+                      bottomRight: Radius.circular(0),
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(0),
                     ),
                   ),
-                  alignment: AlignmentDirectional(0, -1),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(3, 5, 3, 0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    EdgeInsetsDirectional.fromSTEB(0, 2, 3, 2),
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        blurRadius: 4,
-                                        color: Color(0x33000000),
-                                        offset: Offset(
-                                          0,
-                                          2,
-                                        ),
-                                      )
-                                    ],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                  child: Container(
+                    width: double.infinity,
+                    height: 500,
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 40),
+                          child: PageView(
+                            controller: _model.pageViewController ??=
+                                PageController(initialPage: 0),
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              ClipRRect(
+                                child: Image.asset(
+                                  'v_2.jpg',
+                                  width: 300,
+                                  height: 200,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    EdgeInsetsDirectional.fromSTEB(3, 2, 0, 2),
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        blurRadius: 4,
-                                        color: Color(0x33000000),
-                                        offset: Offset(
-                                          0,
-                                          2,
-                                        ),
-                                      )
-                                    ],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              ClipRRect(
+                                child: Image.asset(
+                                  'campus2.jpg',
+                                  width: 300,
+                                  height: 200,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(5, 3, 5, 5),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    EdgeInsetsDirectional.fromSTEB(0, 2, 3, 2),
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        blurRadius: 4,
-                                        color: Color(0x33000000),
-                                        offset: Offset(
-                                          0,
-                                          2,
-                                        ),
-                                      )
-                                    ],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              ClipRRect(
+                                child: Image.asset(
+                                  'Photo_1.jpg',
+                                  width: 300,
+                                  height: 200,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    EdgeInsetsDirectional.fromSTEB(3, 2, 0, 2),
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        blurRadius: 4,
-                                        color: Color(0x33000000),
-                                        offset: Offset(
-                                          0,
-                                          2,
-                                        ),
-                                      )
-                                    ],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(5, 0, 5, 0),
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width,
-                          height: MediaQuery.sizeOf(context).height * 0.495,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 4,
-                                color: Color(0x33000000),
-                                offset: Offset(
-                                  0,
-                                  2,
-                                ),
-                              )
                             ],
-                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      ),
+                        Align(
+                          alignment: AlignmentDirectional(-1, 1),
+                          child: Padding(
+                            padding:
+                                EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
+                            child: smooth_page_indicator.SmoothPageIndicator(
+                              controller: _model.pageViewController ??=
+                                  PageController(initialPage: 0),
+                              count: 3,
+                              axisDirection: Axis.horizontal,
+                              onDotClicked: (i) async {
+                                await _model.pageViewController!.animateToPage(
+                                  i,
+                                  duration: Duration(milliseconds: 500),
+                                  curve: Curves.ease,
+                                );
+                                setState(() {});
+                              },
+                              effect: smooth_page_indicator.ExpandingDotsEffect(
+                                expansionFactor: 3,
+                                spacing: 8,
+                                radius: 16,
+                                dotWidth: 16,
+                                dotHeight: 8,
+                                dotColor: FlutterFlowTheme.of(context).accent1,
+                                activeDotColor:
+                                    FlutterFlowTheme.of(context).primary,
+                                paintStyle: PaintingStyle.fill,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(5, 10, 5, 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      CustomContainer(
+                          iconData: Icons.apartment_rounded,
+                          text: '홈페이지',
+                          url: 'https://www.inhatc.ac.kr'),
+                      CustomContainer(
+                          iconData: Icons.campaign,
+                          text: '학생공지',
+                          url:
+                              'https://www.inhatc.ac.kr/kr/460/subview.do?enc=Zm5jdDF8QEB8JTJGY29tYkJicyUyRmtyJTJGMiUyRmxpc3QuZG8lM0Y%3D'),
+                      CustomContainer(
+                          iconData: Icons.monitor_sharp,
+                          text: '종합정보',
+                          url:
+                              'https://icims.inhatc.ac.kr/intra/sys.Login.doj'),
+                      CustomContainer(
+                          iconData: Icons.auto_stories,
+                          text: '도서관',
+                          url:
+                              'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
+                      CustomContainer(
+                          iconData: Icons.ondemand_video_rounded,
+                          text: '이러닝',
+                          url: 'https://cyber.inhatc.ac.kr/'),
+                      CustomContainer(
+                          iconData: Icons.calendar_month_outlined,
+                          text: '학사일정',
+                          url:
+                              'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
                     ],
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(10, 7, 10, 7),
+                  child: WeatherContainer(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CustomContainer extends StatelessWidget {
+  final IconData iconData;
+  final String text;
+  final String url;
+
+  CustomContainer(
+      {required this.iconData, required this.text, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 55,
+      height: 70,
+      decoration: BoxDecoration(
+        color: Color(0xFF1632BA),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(0, 5, 0, 0),
+            child: FlutterFlowIconButton(
+              borderColor: Colors.transparent,
+              borderRadius: 5,
+              borderWidth: 1,
+              buttonSize: 40,
+              fillColor: Color(0xFF3A58FF),
+              icon: Icon(
+                iconData,
+                color: Colors.white,
+                size: 24,
               ),
-            ],
+              onPressed: () async {
+                if (await canLaunch(url)) {
+                  await launch(url);
+                } else {
+                  throw 'Could not launch $url';
+                }
+              },
+            ),
+          ),
+          Text(
+            text,
+            style: FlutterFlowTheme.of(context).titleSmall.override(
+                  fontFamily: 'Manrope',
+                  fontSize: 12,
+                  letterSpacing: 0,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class WeatherContainer extends StatefulWidget {
+  @override
+  _WeatherContainerState createState() => _WeatherContainerState();
+}
+
+class _WeatherContainerState extends State<WeatherContainer> {
+  String weatherData = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWeatherData();
+  }
+
+  Future<void> fetchWeatherData() async {
+    final response = await http.get(
+        'https://api.openweathermap.org/data/2.5/weather?q=seoul&appid=480bb59d3adafa1750f9286c49d3f6bc&units=metric'
+            as Uri);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        weatherData = jsonDecode(response.body)['main']['temp'].toString();
+      });
+      print("weatherData:");
+      print(weatherData);
+    } else {
+      throw Exception('Failed to load weather data');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(10, 7, 10, 7),
+      child: Container(
+        width: double.infinity,
+        height: 130,
+        decoration: BoxDecoration(
+          color: Color(0xFFAAD0FF),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Center(
+          child: Text(
+            '현재 인하공업전문대학의 날씨: $weatherData°C',
+            style: TextStyle(fontSize: 24),
           ),
         ),
       ),

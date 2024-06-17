@@ -7,6 +7,14 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   final unfocusNode = FocusNode();
 
+  PageController? pageViewController;
+
+  int get pageViewCurrentIndex => pageViewController != null &&
+          pageViewController!.hasClients &&
+          pageViewController!.page != null
+      ? pageViewController!.page!.round()
+      : 0;
+
   @override
   void initState(BuildContext context) {}
 

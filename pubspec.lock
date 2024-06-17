@@ -465,7 +465,7 @@ packages:
     source: hosted
     version: "2.3.1"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "5895291c13fa8a3bd82e76d5627f69e0d85ca6a30dcac95c4ea19a5d555879c2"
@@ -894,7 +894,7 @@ packages:
     source: sdk
     version: "0.0.99"
   smooth_page_indicator:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: smooth_page_indicator
       sha256: "8c301bc686892306cd41672c1880167f140c16be305d5ede8201fefd9fcda829"
