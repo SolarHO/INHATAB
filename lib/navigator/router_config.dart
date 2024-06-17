@@ -14,6 +14,7 @@ import 'package:INHATAB/writeboard.dart';
 import 'package:INHATAB/ChatRoomPage.dart';
 import 'package:INHATAB/PostDetail.dart';
 import 'package:INHATAB/widget/myProfile_widget.dart';
+import 'package:INHATAB/widget/PasswordReset_Widget.dart';
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final router = GoRouter(initialLocation: '/', redirect: (context, state) {
@@ -22,7 +23,7 @@ final router = GoRouter(initialLocation: '/', redirect: (context, state) {
 
     // 사용자가 로그인되어 있지 않고 현재 경로가 회원가입 및 로그인 페이지가 아닌 경우
     if (user == null) {
-        if(state.location != '/CreateAccount') {
+        if(state.location != '/CreateAccount' && state.location != '/password-reset') {
           // 로그인 페이지로 리디렉션
           return '/login';
       }
@@ -105,6 +106,11 @@ final router = GoRouter(initialLocation: '/', redirect: (context, state) {
   GoRoute(
     path: '/myProfile',
     builder: (context, state) => MyProfileWidget(),
+  ),
+  GoRoute(
+    path: '/password-reset',
+    name: 'password-reset',
+    builder: (context, state) => PasswordResetWidget(),
   ),
   //라우터 추가시 이 아래에 추가
 ]);

@@ -484,15 +484,21 @@ class _LoginWidgetState extends State<LoginWidget>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            0, 5, 0, 0),
-                                        child: Text(
-                                          'ID/비밀번호 찾기',
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyMedium
-                                              .override(
-                                            fontFamily: 'Manrope',
-                                            letterSpacing: 0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(0, 5, 0, 0),
+                                        child: InkWell(
+                                          splashColor: Colors.transparent,
+                                          focusColor: Colors.transparent,
+                                          hoverColor: Colors.transparent,
+                                          highlightColor: Colors.transparent,
+                                          onTap: () {
+                                            context.pushNamed('password-reset');
+                                          },
+                                          child: Text(
+                                            'ID/비밀번호 찾기',
+                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                              fontFamily: 'Manrope',
+                                              letterSpacing: 0,
+                                            ),
                                           ),
                                         ),
                                       ),
