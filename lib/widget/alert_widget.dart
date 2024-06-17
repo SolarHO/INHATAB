@@ -57,15 +57,28 @@ class _AlertWidgetState extends State<AlertWidget> {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Expanded(
-                      child: ListView.builder(
+                      child: ListView.separated(
                         itemCount: alertModel.notifications.length,
                         itemBuilder: (context, index) {
                           // 최신 알림이 위로 오도록 역순으로 접근
                           final notification = alertModel.notifications[index];
                           return ListTile(
                             title: Text(notification['message']),
-                            subtitle: Text(notification['timestamp']),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(notification['chatMessage'] ?? ''),
+                                SizedBox(height: 4), // 간격 추가
+                                Text(
+                                  notification['timestamp'],
+                                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                                ),
+                              ],
+                            ),
                           );
+                        },
+                        separatorBuilder: (context, index) {
+                          return Divider(height: 1, thickness: 1);
                         },
                       ),
                     ),

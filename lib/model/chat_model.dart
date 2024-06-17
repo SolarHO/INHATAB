@@ -27,6 +27,20 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
     super.dispose();
   }
 
+  Future<void> sendChatNotification(String fromUserId, String toUserId, String message, String chatMessage) async {
+    DatabaseReference notificationRef = FirebaseDatabase.instance.reference().child('alerts').child(toUserId).push();
+    String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+    await notificationRef.set({
+      'fromUserId': fromUserId,
+      'toUserId': toUserId,
+      'message': message,
+      'chatMessage': chatMessage,
+      'timestamp': formattedTimestamp,
+    });
+  }
+
+
   Future<void> fetchChatRooms() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
