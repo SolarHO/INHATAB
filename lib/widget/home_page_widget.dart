@@ -5,6 +5,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart'
     as smooth_page_indicator;
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:weather/weather.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../model/home_page_model.dart';
 export '../model/home_page_model.dart';
@@ -192,18 +193,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       CustomContainer(
                           iconData: Icons.campaign,
                           text: '학생공지',
-                          url:
-                              'https://www.inhatc.ac.kr/kr/460/subview.do?enc=Zm5jdDF8QEB8JTJGY29tYkJicyUyRmtyJTJGMiUyRmxpc3QuZG8lM0Y%3D'),
+                          url: 'https://www.inhatc.ac.kr/kr/460/subview.do?enc=Zm5jdDF8QEB8JTJGY29tYkJicyUyRmtyJTJGMiUyRmxpc3QuZG8lM0Y%3D'),
                       CustomContainer(
                           iconData: Icons.monitor_sharp,
                           text: '종합정보',
-                          url:
-                              'https://icims.inhatc.ac.kr/intra/sys.Login.doj'),
+                          url: 'https://icims.inhatc.ac.kr/intra/sys.Login.doj'),
                       CustomContainer(
                           iconData: Icons.auto_stories,
                           text: '도서관',
-                          url:
-                              'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
+                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
                       CustomContainer(
                           iconData: Icons.ondemand_video_rounded,
                           text: '이러닝',
@@ -211,15 +209,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       CustomContainer(
                           iconData: Icons.calendar_month_outlined,
                           text: '학사일정',
-                          url:
-                              'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
+                          url: 'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
                     ],
                   ),
                 ),
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(10, 7, 10, 7),
-                  child: WeatherContainer(),
-                ),
+                  child: WeatherDisplayWidget(),
+                )
               ],
             ),
           ),
@@ -285,54 +282,142 @@ class CustomContainer extends StatelessWidget {
   }
 }
 
-class WeatherContainer extends StatefulWidget {
+class WeatherDisplayWidget extends StatefulWidget {
   @override
-  _WeatherContainerState createState() => _WeatherContainerState();
+  _WeatherDisplayWidgetState createState() => _WeatherDisplayWidgetState();
 }
 
-class _WeatherContainerState extends State<WeatherContainer> {
-  String weatherData = '';
+class _WeatherDisplayWidgetState extends State<WeatherDisplayWidget> {
+  late WeatherFactory weatherFactory;
+  Weather? currentWeather;
+  List<Weather> forecast = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchWeatherData();
+    weatherFactory = WeatherFactory("480bb59d3adafa1750f9286c49d3f6bc");
+    fetchWeather();
   }
 
-  Future<void> fetchWeatherData() async {
-    final response = await http.get(
-        'https://api.openweathermap.org/data/2.5/weather?q=seoul&appid=480bb59d3adafa1750f9286c49d3f6bc&units=metric'
-            as Uri);
-
-    if (response.statusCode == 200) {
+  void fetchWeather() async {
+    try {
+      // 현재 날씨 데이터 가져오기
+      currentWeather =
+          await weatherFactory.currentWeatherByLocation(37.4508, 126.6572);
+      print(currentWeather);
+      // 3시간 간격으로 날씨 예보 데이터 가져오기
+      var fiveDayForecast =
+          await weatherFactory.fiveDayForecastByLocation(37.4508, 126.6572);
+      print(fiveDayForecast);
+      forecast = fiveDayForecast.take(2).toList();
+      print(forecast);
+    } catch (e) {
+      print(e);
+    } finally {
       setState(() {
-        weatherData = jsonDecode(response.body)['main']['temp'].toString();
+        isLoading = false;
       });
-      print("weatherData:");
-      print(weatherData);
+    }
+  }
+
+  IconData getWeatherIcon(String description) {
+    // 날씨 설명을 기반으로 적절한 Flutter 아이콘 반환
+    if (description.contains('clear')) {
+      return Icons.wb_sunny;
+    } else if (description.contains('cloud')) {
+      return Icons.cloud;
+    } else if (description.contains('rain')) {
+      return Icons.beach_access;
+    } else if (description.contains('snow')) {
+      return Icons.ac_unit;
     } else {
-      throw Exception('Failed to load weather data');
+      return Icons.wb_cloudy;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(10, 7, 10, 7),
-      child: Container(
-        width: double.infinity,
-        height: 130,
-        decoration: BoxDecoration(
-          color: Color(0xFFAAD0FF),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            '현재 인하공업전문대학의 날씨: $weatherData°C',
-            style: TextStyle(fontSize: 24),
-          ),
-        ),
-      ),
-    );
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (currentWeather != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '지금 학교 날씨',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          Text(
+                            '${currentWeather!.temperature!.celsius!.toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                                fontSize: 35, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '체감온도: ${currentWeather!.tempFeelsLike!.celsius!.toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    const Color.fromARGB(255, 110, 110, 110)),
+                          ),
+                          Text(
+                            '최저: ${currentWeather!.tempMin!.celsius!.toStringAsFixed(1)}°C / 최고: ${currentWeather!.tempMax!.celsius!.toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    const Color.fromARGB(255, 110, 110, 110)),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Icon(
+                            getWeatherIcon(currentWeather!.weatherDescription!),
+                            size: 50,
+                            color: Colors.blue,
+                          ),
+                          Text(
+                            '풍속: ${currentWeather!.windSpeed} km/h',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            '습도: ${currentWeather!.humidity}%',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ...forecast.map((weather) {
+                  return ListTile(
+                    title: Text('${weather.date?.hour}:00',
+                        style: TextStyle(color: Colors.grey)),
+                    leading: Icon(getWeatherIcon(weather.weatherDescription!),
+                        color: Colors.grey),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                            '${weather.temperature!.celsius!.toStringAsFixed(1)}°C',
+                            style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          );
   }
 }

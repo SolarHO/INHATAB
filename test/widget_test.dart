@@ -9,22 +9,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:INHATAB/main.dart';
+import 'package:weather/weather.dart';
 
-void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    //await tester.pumpWidget(const MyApp());
+class WeatherForecastWidget extends StatefulWidget {
+  @override
+  _WeatherForecastWidgetState createState() => _WeatherForecastWidgetState();
+}
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+class _WeatherForecastWidgetState extends State<WeatherForecastWidget> {
+  late WeatherFactory weatherFactory;
+  List<Weather> forecast = [];
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  @override
+  void initState() {
+    super.initState();
+    weatherFactory = WeatherFactory("480bb59d3adafa1750f9286c49d3f6bc");
+    fetchWeather();
+  }
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
-  });
+  void fetchWeather() async {
+    Weather weather = await weatherFactory.currentWeatherByLocation(37.4508, 126.6572);
+    forecast.add(weather);
+    for (int i = 1; i <= 4; i++) {
+      Weather forecastWeather = await weatherFactory.currentWeatherByLocation(37.4508, 126.6572);
+      forecast.add(forecastWeather);
+      await Future.delayed(Duration(hours: 3));
+    }
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: forecast.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          leading: Icon(Icons.wb_sunny), // Replace with actual weather icon
+          title: Text('${forecast[index].date!.hour}:00'),
+          subtitle: Text('${forecast[index].temperature!.celsius!.toStringAsFixed(1)}°C'),
+          trailing: Text('습도: ${forecast[index].humidity}%'),
+        );
+      },
+    );
+  }
 }
