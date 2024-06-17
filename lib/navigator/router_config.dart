@@ -110,7 +110,7 @@ final router = GoRouter(initialLocation: '/', redirect: (context, state) {
   GoRoute(
     path: '/password-reset',
     name: 'password-reset',
-    builder: (context, state) => PasswordResetWidget(),
+    builder: (context, state) => PasswordResetWidget(), //비밀번호찾기
   ),
   //라우터 추가시 이 아래에 추가
 ]);

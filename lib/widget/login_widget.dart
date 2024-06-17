@@ -491,7 +491,7 @@ class _LoginWidgetState extends State<LoginWidget>
                                           hoverColor: Colors.transparent,
                                           highlightColor: Colors.transparent,
                                           onTap: () {
-                                            context.pushNamed('password-reset');
+                                            context.pushNamed('password-reset'); //비밀번호찾기위젯
                                           },
                                           child: Text(
                                             'ID/비밀번호 찾기',

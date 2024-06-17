@@ -14,7 +14,7 @@ class _PasswordResetWidgetState extends State<PasswordResetWidget> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  Future<void> _sendPasswordResetEmail() async {
+  Future<void> _sendPasswordResetEmail() async { //이메일보내기
     if (_formKey.currentState?.validate() ?? false) {
       try {
         await FirebaseAuth.instance.sendPasswordResetEmail(
