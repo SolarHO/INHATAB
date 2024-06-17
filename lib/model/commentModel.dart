@@ -23,6 +23,40 @@ class CommentModel with ChangeNotifier {
     return DateFormat('MM/dd HH:mm').format(dateTime);
   }
 
+
+   // 작성자에게 댓글이 달렸다고 알림
+  Future<void> _sendNotification(String fromUserId, String toUserId, String message, String timestamp) async {
+    DatabaseReference notificationRef = FirebaseDatabase.instance.reference().child('alerts').child(toUserId).push();
+    await notificationRef.set({
+      'fromUserId': fromUserId,
+      'toUserId': toUserId,
+      'message': message,
+      'timestamp': timestamp,
+    });
+  }
+
+
+  Future<void> _createNotification(String userId, bool isReply) async {
+    if (postWriter != null && postWriter != userId) {
+      String? selectedBoard = (await SharedPreferences.getInstance()).getString('selectedBoard');
+      if (selectedBoard == null) return;
+
+      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).child(postId!);
+      DataSnapshot postSnapshot = (await postRef.once()).snapshot;
+      if (postSnapshot.value == null) return;
+
+      Map<dynamic, dynamic> postData = postSnapshot.value as Map<dynamic, dynamic>;
+      String title = postData['title'] ?? '제목 없음';
+
+      String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+      String notificationMessage = isReply
+          ? "'$title' 게시글에 댓글이 달렸습니다."
+          : "'$title' 게시글에 댓글이 달렸습니다.";
+      await _sendNotification(userId, postWriter!, notificationMessage, formattedTimestamp);
+    }
+  }
+
+
   // 댓글을 불러오는 메서드
   Future<void> fetchComments(String postIds) async {
     try {
@@ -125,7 +159,15 @@ class CommentModel with ChangeNotifier {
         'anony': isAnonymous, // 익명 체크박스의 상태 저장
       });
       addComment(commentId, commentContent, userId!, DateTime.now().toIso8601String(), userName!, isAnonymous, []);
+      if (postWriter != null && postWriter != userId) {
+
+
+        // 알림 생성
+        await _createNotification(userId!, false);
+
+      }
     }
+
   }
 
   //대댓글 작성 메서드
@@ -144,6 +186,10 @@ class CommentModel with ChangeNotifier {
       'userName': userName, // DB에는 원래 작성자의 이름 저장
       'anony': isReplyAnonymous, // 익명 체크박스의 상태 저장
     });
+
+    // 알림 생성
+    await _createNotification(userId!, false);
+  
   }
 
   // 댓글을 추가하는 메서드
