@@ -111,7 +111,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             children: [
                               ClipRRect(
                                 child: Image(
-                                  image: AssetImage('v_2.jpg'),
+                                  image: AssetImage('assets/v_2.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
@@ -119,7 +119,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                               ClipRRect(
                                 child: Image(
-                                  image: AssetImage('campus2.jpg'),
+                                  image: AssetImage('assets/campus2.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
@@ -127,7 +127,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                               ClipRRect(
                                 child: Image(
-                                  image: AssetImage('Photo_1.jpg'),
+                                  image: AssetImage('assets/Photo_1.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
