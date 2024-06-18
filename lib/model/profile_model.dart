@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:INHATAB/model/chat_model.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+
 class ProfileModel extends ChangeNotifier {
   /// State fields for stateful widgets in this page.
   final unfocusNode = FocusNode();
@@ -73,6 +74,30 @@ class ProfileModel extends ChangeNotifier {
 
     // ChatModel의 refreshChatRooms 호출
     Provider.of<ChatModel>(context, listen: false).refreshChatRooms();
+
+    // 게시글 작성자 이름 업데이트
+    await _updatePostWriterName(userId, newName);
+  }
+
+  Future<void> _updatePostWriterName(String userId, String newName) async {
+    DatabaseReference postsRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat');
+    DataSnapshot postsSnapshot = await postsRef.once().then((event) => event.snapshot);
+
+    if (postsSnapshot.value != null) {
+      Map<dynamic, dynamic> boards = postsSnapshot.value as Map<dynamic, dynamic>;
+
+      for (var board in boards.values) {
+        if (board is Map) {
+          for (var post in board.values) {
+            if (post is Map && post['uid'] == userId) {
+              String postId = post['postId'];
+              DatabaseReference postRef = postsRef.child(postId);
+              await postRef.update({'name': newName});
+            }
+          }
+        }
+      }
+    }
   }
 
   Future<bool> verifyCurrentPassword(String password) async {

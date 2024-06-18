@@ -80,6 +80,13 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
         updateLatestMessageTime(chatId);
       }
     }
+    // 최근 메시지 시간순으로 정렬
+    userChatRooms.sort((a, b) {
+      DateTime timeA = DateFormat('yyyy-MM-dd HH:mm').parse(a['timestamp']);
+      DateTime timeB = DateFormat('yyyy-MM-dd HH:mm').parse(b['timestamp']);
+      return timeB.compareTo(timeA); // 시간 내림차순으로 정렬
+    });
+
 
     _chatRooms = userChatRooms;
     notifyListeners();
@@ -128,6 +135,12 @@ class ChatModel extends FlutterFlowModel<ChatWidget> with ChangeNotifier {
       if (data != null) {
         final timestamp = data['timestamp'] as String;
         _latestMessageTimes[chatId] = timestamp;
+        // 채팅방 목록 정렬
+        _chatRooms.sort((a, b) {
+          DateTime timeA = DateFormat('yyyy-MM-dd HH:mm').parse(_latestMessageTimes[a['chatId']] ?? a['timestamp']);
+          DateTime timeB = DateFormat('yyyy-MM-dd HH:mm').parse(_latestMessageTimes[b['chatId']] ?? b['timestamp']);
+          return timeB.compareTo(timeA); // 시간 내림차순으로 정렬
+        });
         notifyListeners();
       }
     });

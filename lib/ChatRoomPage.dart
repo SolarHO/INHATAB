@@ -22,6 +22,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   String opponentName = '알 수 없음'; // 상대방 이름을 저장할 변수
   String? currentUserId;
   bool isAnonymous = false;
+  String? opponentUserId;
   @override
   void initState() {
     super.initState();
@@ -154,37 +155,57 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   }
 
   Future<void> _leaveChat() async {
-    if (currentUserId == null || opponentName == null) return;
+    print('Attempting to leave chat...');
+    print('Current user ID: $currentUserId');
+    print('Opponent user ID: $opponentUserId');
 
-    // 상대방에게 "상대방이 채팅방을 나갔습니다" 메시지를 보냄
-    String leaveMessage = "상대방이  채팅방을 나갔습니다.";
-    await _sendMessage(leaveMessage);
-
-    // userChats에서 해당 채팅방 제거
-    DatabaseReference userChatRef = FirebaseDatabase.instance.reference().child('userChats').child(currentUserId!).child(widget.chatId);
-    await userChatRef.remove();
+    if (currentUserId == null) {
+      print('Current user ID is null.');
+      return;
+    }
 
     // chat 노드에서 users 리스트에서 사용자 제거
     DatabaseReference chatUserRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId).child('users');
     DatabaseEvent event = await chatUserRef.once();
     DataSnapshot snapshot = event.snapshot;
-    if (snapshot.value != null && snapshot.value is Iterable) {
-      List<dynamic> users = List<dynamic>.from(snapshot.value as Iterable); // 수정된 부분
-      users.remove(currentUserId);
-
-      if (users.isEmpty) {
-        // 모두 나간 경우 chatId 노드 삭제
+    if (snapshot.value != null) {
+      if (snapshot.value is List) {
+        List<dynamic> users = List<dynamic>.from(snapshot.value as Iterable);
+        users.remove(currentUserId);
+        if (users.isEmpty) {
+          // 모두 나간 경우 chatId 노드 삭제
+          DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
+          await chatRef.remove();
+        } else {
+          await chatUserRef.set(users);
+        }
+      } else if (snapshot.value is Map) {
+        Map<dynamic, dynamic> usersMap = Map<dynamic, dynamic>.from(snapshot.value as Map);
+        usersMap.remove(currentUserId);
+        if (usersMap.isEmpty) {
+          // 모두 나간 경우 chatId 노드 삭제
+          DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
+          await chatRef.remove();
+        } else {
+          await chatUserRef.set(usersMap);
+        }
+      } else {
+        print('Unexpected snapshot value type: ${snapshot.value.runtimeType}');
+        // 현재 사용자가 유일한 사용자라면 chatId 노드 삭제
         DatabaseReference chatRef = FirebaseDatabase.instance.reference().child('chat').child(widget.chatId);
         await chatRef.remove();
-      } else {
-        await chatUserRef.set(users);
       }
+    } else {
+      print('Snapshot value is null.');
     }
+
+    // userChats에서 해당 채팅방 제거
+    DatabaseReference userChatRef = FirebaseDatabase.instance.reference().child('userChats').child(currentUserId!).child(widget.chatId);
+    await userChatRef.remove();
 
     // 채팅방에서 나가고 이전 화면으로 돌아감
     context.go('/Chat');
   }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(

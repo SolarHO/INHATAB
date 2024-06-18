@@ -31,7 +31,7 @@ class PostModel with ChangeNotifier {
       String? selectedBoard = prefs.getString('selectedBoard');
       String? userId = prefs.getString('userId');
       DatabaseReference userRef =
-          FirebaseDatabase.instance.reference().child('users').child(userId!);
+      FirebaseDatabase.instance.reference().child('users').child(userId!);
       DatabaseEvent event = await userRef.child('like').child(postId!).once();
       DataSnapshot snapshot = event.snapshot;
       if (snapshot.value == null) {
@@ -44,7 +44,7 @@ class PostModel with ChangeNotifier {
       DatabaseReference postRef;
       if (selectedBoard == '인기게시글') {
         String? actualBoard =
-            await getActualBoard(postId); // '인기게시글'의 실제 게시판을 찾는 함수
+        await getActualBoard(postId); // '인기게시글'의 실제 게시판을 찾는 함수
         postRef = FirebaseDatabase.instance
             .reference()
             .child('boardinfo')
@@ -72,7 +72,7 @@ class PostModel with ChangeNotifier {
           if (post['anony'] == true) {
             writerName = "익명";
           } else {
-            writerName = post['name'];
+            writerName = await _fetchUserName(writerId!); // 작성자 이름을 업데이트된 이름으로 불러오기
           }
           content = post['contents']['content'];
           likeCount = post['likecount'];
@@ -85,6 +85,16 @@ class PostModel with ChangeNotifier {
     } catch (error) {
       print("게시글 정보를 가져오는 데 실패했습니다: $error");
     }
+  }
+  Future<String?> _fetchUserName(String userId) async {
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
+    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+      return userData['name'];
+    }
+    return null;
   }
 
   Future<String?> getActualBoard(String postId) async {
@@ -119,7 +129,7 @@ class PostModel with ChangeNotifier {
 
     try {
       DatabaseReference userRef =
-          FirebaseDatabase.instance.reference().child('users').child(userId);
+      FirebaseDatabase.instance.reference().child('users').child(userId);
       DatabaseReference postRef = FirebaseDatabase.instance
           .reference()
           .child('boardinfo')
@@ -196,9 +206,9 @@ class PostModel with ChangeNotifier {
   Future<String> fetchWriterStatus(String writerId) async {
     //사용자의 상태확인 (삭제된사용자일경우....)
     DatabaseReference userRef =
-        FirebaseDatabase.instance.reference().child('users').child(writerId);
+    FirebaseDatabase.instance.reference().child('users').child(writerId);
     DataSnapshot snapshot =
-        await userRef.once().then((event) => event.snapshot);
+    await userRef.once().then((event) => event.snapshot);
 
     if (snapshot.value == null) {
       return 'deleted';

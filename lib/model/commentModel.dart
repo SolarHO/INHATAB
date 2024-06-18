@@ -24,7 +24,7 @@ class CommentModel with ChangeNotifier {
   }
 
 
-   // 작성자에게 댓글이 달렸다고 알림
+  // 작성자에게 댓글이 달렸다고 알림
   Future<void> _sendNotification(String fromUserId, String toUserId, String message, String timestamp) async {
     DatabaseReference notificationRef = FirebaseDatabase.instance.reference().child('alerts').child(toUserId).push();
     await notificationRef.set({
@@ -54,6 +54,18 @@ class CommentModel with ChangeNotifier {
           : "'$title' 게시글에 댓글이 달렸습니다.";
       await _sendNotification(userId, postWriter!, notificationMessage, formattedTimestamp);
     }
+  }
+
+
+  Future<String?> _fetchUserName(String userId) async {
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
+    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+      return userData['name'];
+    }
+    return null;
   }
 
 
@@ -93,6 +105,11 @@ class CommentModel with ChangeNotifier {
             bool isAnonymous = entry.value['anony']; // 익명 여부를 가져옴
             String? timestamp = entry.value['timestamp'];
             List<Map<String, String>> replyList = [];
+
+            // 댓글 작성자의 이름을 업데이트된 이름으로 불러오기
+            if (!isAnonymous) {
+              userName = await _fetchUserName(userId!);
+            }
 
             // 대댓글 노드가 있는지 확인
             if (entry.value['replies'] != null) {
@@ -219,7 +236,7 @@ class CommentModel with ChangeNotifier {
 
     // 알림 생성
     await _createNotification(userId!, false);
-  
+
   }
 
   // 댓글을 추가하는 메서드
