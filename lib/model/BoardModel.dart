@@ -16,9 +16,6 @@ class BoardModel with ChangeNotifier {
   FocusNode unfocusNode = FocusNode(); // unfocusNode 추가
   String? searchQuery; // 검색어
 
-
-
-
   String formatTimestamp(String timestamp) {
     DateTime dateTime = DateTime.parse(timestamp);
     // 'yy-MM-dd HH:mm' 형식으로 날짜와 시간을 포맷
@@ -26,52 +23,95 @@ class BoardModel with ChangeNotifier {
   }
 
   Future<void> fetchPosts({String? query}) async { //게시글 목록 불러오기
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    selectedBoard = prefs.getString('selectedBoard');
-    if (selectedBoard == null) {
-      throw Exception('게시판을 선택하지 않았습니다.');
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  selectedBoard = prefs.getString('selectedBoard');
+  if (selectedBoard == null) {
+    throw Exception('게시판을 선택하지 않았습니다.');
+  }
+  searchQuery = query; // 검색어  저장
+  try {
+    DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat');
+    DatabaseReference popularPostRef = postRef.child('인기게시글');
+    Query dbQuery;
+
+    if (selectedBoard == '인기게시글') {
+      dbQuery = popularPostRef.orderByKey();
+    } else {
+      dbQuery = postRef.child(selectedBoard!).orderByKey();
     }
-    searchQuery = query; // 검색어  저장
-    try {
-      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!);
-      Query dbQuery = postRef.orderByKey();
 
-      // _lastKey가 있으면 _lastKey 이전의 게시글을 불러옴
-      if (lastKey != null) {
-        dbQuery = dbQuery.endBefore(lastKey);
-      }
+    // _lastKey가 있으면 _lastKey 이전의 게시글을 불러옴
+    if (lastKey != null) {
+      dbQuery = dbQuery.endBefore(lastKey);
+    }
 
-      // 가장 최근의 _limit개의 게시글을 불러옴
-      dbQuery = dbQuery.limitToLast(limit);
+    // 가장 최근의 _limit개의 게시글을 불러옴
+    dbQuery = dbQuery.limitToLast(limit);
 
-      DatabaseEvent event = await dbQuery.once();
-      DataSnapshot snapshot = event.snapshot;
+    DatabaseEvent event = await dbQuery.once();
+    DataSnapshot snapshot = event.snapshot;
 
-      if (snapshot.value != null) {
-        Map<dynamic, dynamic>? posts = snapshot.value as Map<dynamic, dynamic>?;
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic>? posts = snapshot.value as Map<dynamic, dynamic>?;
 
-        if (posts != null) {
-          var reversedPosts = posts.entries.toList()
-            ..sort((a, b) => b.key.compareTo(a.key));
+      if (posts != null) {
+        var reversedPosts = posts.entries.toList()
+          ..sort((a, b) => b.key.compareTo(a.key));
 
-          // _lastKey 업데이트
-          String newLastKey = reversedPosts.last.key;
+        // _lastKey 업데이트
+        String newLastKey = reversedPosts.last.key;
 
-          // 처음 작성된 게시글을 불러왔으면 새로고침 중단
-          if (lastKey == newLastKey) {
-            return;
+        // 처음 작성된 게시글을 불러왔으면 새로고침 중단
+        if (lastKey == newLastKey) {
+          return;
+        }
+
+        lastKey = newLastKey;
+
+        // 검색어가 있는 경우, 해당하는 게시글만 필터링
+        if (searchQuery != null && searchQuery!.isNotEmpty) {
+          reversedPosts = reversedPosts.where((entry) {
+            String title = entry.value['title']?.toString() ?? '';
+            return title.contains(searchQuery!);
+          }).toList();
+        }
+        
+        if(selectedBoard == '인기게시글') {
+          for (var entry in reversedPosts) {
+            String postId = entry.key;
+            String boardName = entry.value['selectedBoard']?.toString() ?? '';
+            DatabaseReference boardPostRef = postRef.child(boardName).child(postId);
+
+            DatabaseEvent boardPostEvent = await boardPostRef.once();
+            DataSnapshot boardPostSnapshot = boardPostEvent.snapshot;
+
+            if (boardPostSnapshot.value != null) {
+              Map<dynamic, dynamic>? postInfo = boardPostSnapshot.value as Map<dynamic, dynamic>?;
+
+              if (postInfo != null) {
+                String title = postInfo['title']?.toString() ?? '제목 없음';
+                String? username;
+                if (postInfo['anony'] == true) {
+                  username = "익명";
+                } else {
+                  String userId = postInfo['uid']?.toString() ?? '';
+                  if (userId.isNotEmpty) {
+                    username = await _fetchUserName(userId) ?? "탈퇴된 사용자";
+                  } else {
+                    username = "알 수 없음";
+                  }
+                }
+                String timestamp = postInfo['timestamp']?.toString() ?? DateTime.now().toIso8601String();
+                int likeCount = postInfo['likecount'] ?? 0;
+                int commentCount = postInfo['commentcount'] ?? 0;
+
+                if (title != null && postId != null && username != null) {
+                  addPost(title, postId, username, likeCount, commentCount, timestamp);
+                }
+              }
+            }
           }
-
-          lastKey = newLastKey;
-
-          // 검색어가 있는 경우, 해당하는 게시글만 필터링
-          if (searchQuery != null && searchQuery!.isNotEmpty) {
-            reversedPosts = reversedPosts.where((entry) {
-              String title = entry.value['title']?.toString() ?? '';
-              return title.contains(searchQuery!);
-            }).toList();
-          }
-
+        } else {
           for (var entry in reversedPosts) {
             String title = entry.value['title']?.toString() ?? '제목 없음';
             String postId = entry.key;
@@ -96,10 +136,12 @@ class BoardModel with ChangeNotifier {
           }
         }
       }
-    } catch (error) {
-      print("게시글 정보를 가져오는 데 실패했습니다: $error");
     }
+  } catch (error) {
+    print("게시글 정보를 가져오는 데 실패했습니다: $error");
   }
+}
+
 
   Future<String?> _fetchUserName(String userId) async {
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);

@@ -47,14 +47,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         appBar: AppBar(
           backgroundColor: Color(0x4C181BF8),
           automaticallyImplyLeading: false,
-          leading: Align(
-            alignment: AlignmentDirectional(0, 0),
-            child: FaIcon(
-              FontAwesomeIcons.bars,
-              color: FlutterFlowTheme.of(context).accent4,
-              size: 24,
-            ),
-          ),
           title: Text(
             'INHA TAB',
             textAlign: TextAlign.center,

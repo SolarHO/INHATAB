@@ -120,6 +120,7 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
 
             },
           ),
+                if (Provider.of<BoardModel>(context, listen: false).selectedBoard != '인기게시글')
                 Container(
                   margin: EdgeInsets.all(8.0),
                   decoration: BoxDecoration(

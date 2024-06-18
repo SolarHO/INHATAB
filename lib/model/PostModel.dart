@@ -12,7 +12,7 @@ class PostModel with ChangeNotifier {
   int? likeCount; // 좋아요 수
   String? imageUrl; //이미지 url
   String? timestamp; // 게시글 작성 시간
-  Color? likebtnColor; 
+  Color? likebtnColor;
 
   String? getWriterId() {
     return writerId;
@@ -30,15 +30,36 @@ class PostModel with ChangeNotifier {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? selectedBoard = prefs.getString('selectedBoard');
       String? userId = prefs.getString('userId');
-      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId!);
+      DatabaseReference userRef =
+          FirebaseDatabase.instance.reference().child('users').child(userId!);
       DatabaseEvent event = await userRef.child('like').child(postId!).once();
       DataSnapshot snapshot = event.snapshot;
-      if(snapshot.value == null) {
+      if (snapshot.value == null) {
         likebtnColor = Colors.grey;
       } else {
         likebtnColor = Colors.blue;
       }
-      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId);
+
+      // '인기게시글'일 경우, 해당 게시글의 실제 게시판을 찾습니다.
+      DatabaseReference postRef;
+      if (selectedBoard == '인기게시글') {
+        String? actualBoard =
+            await getActualBoard(postId); // '인기게시글'의 실제 게시판을 찾는 함수
+        postRef = FirebaseDatabase.instance
+            .reference()
+            .child('boardinfo')
+            .child('boardstat')
+            .child(actualBoard!)
+            .child(postId);
+      } else {
+        postRef = FirebaseDatabase.instance
+            .reference()
+            .child('boardinfo')
+            .child('boardstat')
+            .child(selectedBoard!)
+            .child(postId);
+      }
+
       snapshot = (await postRef.once()).snapshot;
 
       if (snapshot.value != null) {
@@ -48,7 +69,7 @@ class PostModel with ChangeNotifier {
           PostId = postId;
           title = post['title'];
           writerId = post['uid'];
-          if(post['anony'] == true) {
+          if (post['anony'] == true) {
             writerName = "익명";
           } else {
             writerName = post['name'];
@@ -66,6 +87,28 @@ class PostModel with ChangeNotifier {
     }
   }
 
+  Future<String?> getActualBoard(String postId) async {
+    // '인기게시글'의 postId 게시글 데이터에서 'selectedBoard' 값을 찾습니다.
+    DatabaseReference popularPostRef = FirebaseDatabase.instance
+        .reference()
+        .child('boardinfo')
+        .child('boardstat')
+        .child('인기게시글')
+        .child(postId);
+    DataSnapshot snapshot = (await popularPostRef.once()).snapshot;
+
+    // 'selectedBoard' 값을 반환합니다.
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic>? post = snapshot.value as Map<dynamic, dynamic>?;
+      if (post != null && post.containsKey('selectedBoard')) {
+        return post['selectedBoard'];
+      }
+    }
+
+    // 'selectedBoard' 값을 찾지 못했다면, null을 반환합니다.
+    return null;
+  }
+
   Future<void> likePost() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userId = prefs.getString('userId');
@@ -75,21 +118,52 @@ class PostModel with ChangeNotifier {
     }
 
     try {
-      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
-      DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(PostId!);
+      DatabaseReference userRef =
+          FirebaseDatabase.instance.reference().child('users').child(userId);
+      DatabaseReference postRef = FirebaseDatabase.instance
+          .reference()
+          .child('boardinfo')
+          .child('boardstat');
       DatabaseEvent event = await userRef.child('like').child(PostId!).once();
       DataSnapshot snapshot = event.snapshot;
 
-      if (snapshot.value == null) { //아직 좋아요를 누르지 않은 글
+      // '인기게시글'일 경우, 해당 게시글의 실제 게시판을 찾습니다.
+      if (selectedBoard == '인기게시글') {
+        selectedBoard = await getActualBoard(PostId!);
+      }
+
+      if (snapshot.value == null) {
+        //아직 좋아요를 누르지 않은 글
         likeCount = (likeCount ?? 0) + 1;
-        await postRef.child('likecount').set(ServerValue.increment(1));
+        await postRef
+            .child(selectedBoard!)
+            .child(PostId!)
+            .child('likecount')
+            .set(ServerValue.increment(1));
         await userRef.child('like').child(PostId!).set(true);
         likebtnColor = Colors.blue;
-      } else { //좋아요를 누른 글(좋아요 취소)
+        if (likeCount! >= 10) {
+          //좋아요 수가 10을 넘으면 인기게시글에 등록됨
+          await postRef
+              .child('인기게시글')
+              .child(PostId!)
+              .child('selectedBoard')
+              .set(selectedBoard);
+        }
+      } else {
+        //좋아요를 누른 글(좋아요 취소)
         likeCount = (likeCount ?? 0) - 1;
-        await postRef.child('likecount').set(ServerValue.increment(-1));
+        await postRef
+            .child(selectedBoard!)
+            .child(PostId!)
+            .child('likecount')
+            .set(ServerValue.increment(-1));
         await userRef.child('like').child(PostId!).remove();
         likebtnColor = Colors.grey;
+        if (likeCount! < 10) {
+          //좋아요 수가 10보다 낮아지면 인기게시글에서 제외됨
+          await postRef.child('인기게시글').child(PostId!).remove();
+        }
       }
       notifyListeners();
     } catch (error) {
@@ -102,15 +176,29 @@ class PostModel with ChangeNotifier {
   Future<void> deletePost(String postId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
-    DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
+
+    // '인기게시글'일 경우, 해당 게시글의 실제 게시판을 찾습니다.
+    if (selectedBoard == '인기게시글') {
+      selectedBoard = await getActualBoard(postId);
+    }
+
+    DatabaseReference Ref = FirebaseDatabase.instance
+        .reference()
+        .child('boardinfo')
+        .child('boardstat')
+        .child(selectedBoard!)
+        .child(postId!);
 
     await Ref.remove();
     notifyListeners();
   }
 
-  Future<String> fetchWriterStatus(String writerId) async { //사용자의 상태확인 (삭제된사용자일경우....)
-    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(writerId);
-    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+  Future<String> fetchWriterStatus(String writerId) async {
+    //사용자의 상태확인 (삭제된사용자일경우....)
+    DatabaseReference userRef =
+        FirebaseDatabase.instance.reference().child('users').child(writerId);
+    DataSnapshot snapshot =
+        await userRef.once().then((event) => event.snapshot);
 
     if (snapshot.value == null) {
       return 'deleted';

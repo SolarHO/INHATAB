@@ -63,6 +63,9 @@ class CommentModel with ChangeNotifier {
       postId = postIds;
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? selectedBoard = prefs.getString('selectedBoard');
+      if (selectedBoard == '인기게시글') {
+        selectedBoard = await getActualBoard(postId!);
+      }
       DatabaseReference contentsRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
       DatabaseReference commentsRef = contentsRef.child('contents').child('comment');
 
@@ -129,6 +132,27 @@ class CommentModel with ChangeNotifier {
     }
   }
 
+  Future<String?> getActualBoard(String postId) async {
+    // '인기게시글'의 postId 게시글 데이터에서 'selectedBoard' 값을 찾습니다.
+    DatabaseReference popularPostRef = FirebaseDatabase.instance
+        .reference()
+        .child('boardinfo')
+        .child('boardstat')
+        .child('인기게시글')
+        .child(postId);
+    DataSnapshot snapshot = (await popularPostRef.once()).snapshot;
+
+    // 'selectedBoard' 값을 반환합니다.
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic>? post = snapshot.value as Map<dynamic, dynamic>?;
+      if (post != null && post.containsKey('selectedBoard')) {
+        return post['selectedBoard'];
+      }
+    }
+    // 'selectedBoard' 값을 찾지 못했다면, null을 반환합니다.
+    return null;
+  }
+
   //익명 닉네임을 가져오는 메서드
   String getAnonymousName(String userId) {
     if (userId == postWriter) { // 게시글 작성자가 댓글을 작성한 경우
@@ -145,6 +169,9 @@ class CommentModel with ChangeNotifier {
   Future<void> addCommentToDb(String commentContent, bool isAnonymous) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
+    if (selectedBoard == '인기게시글') {
+      selectedBoard = await getActualBoard(postId!);
+    }
     String? userId = prefs.getString('userId');
     String? userName = prefs.getString('userName');
     if (postId != null) {
@@ -174,6 +201,9 @@ class CommentModel with ChangeNotifier {
   Future<void> addReplyToDb(String commentId, String replyContent, bool isReplyAnonymous) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
+    if (selectedBoard == '인기게시글') {
+      selectedBoard = await getActualBoard(postId!);
+    }
     String? userId = prefs.getString('userId');
     String? userName = prefs.getString('userName');
     DatabaseReference replyRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
@@ -211,6 +241,9 @@ class CommentModel with ChangeNotifier {
   Future<void> deleteComment(String commentId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
+    if (selectedBoard == '인기게시글') {
+      selectedBoard = await getActualBoard(postId!);
+    }
     DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
     DataSnapshot repliesSnapshot = (await Ref.child('contents').child('comment').child(commentId).child('replies').once()).snapshot;
 
@@ -233,6 +266,9 @@ class CommentModel with ChangeNotifier {
   Future<void> deleteReplies(String commentId, String replyId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? selectedBoard = prefs.getString('selectedBoard');
+    if (selectedBoard == '인기게시글') {
+      selectedBoard = await getActualBoard(postId!);
+    }
     DatabaseReference Ref = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
     DatabaseReference replyRef = Ref.child('contents').child('comment').child(commentId).child('replies').child(replyId);
 

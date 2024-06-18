@@ -63,6 +63,24 @@ class _BbsWidgetState extends State<BbsWidget> {
           top: true,
           child: ListView(
             children: [
+              InkWell(
+                  onTap: () async {
+                    SharedPreferences prefs =
+                    await SharedPreferences.getInstance();
+                    await prefs.setString('selectedBoard', '인기게시글');
+                    Provider.of<BoardModel>(context, listen: false).fetchPosts();
+                    GoRouter.of(context).go('/Boardload');
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 13),
+                    margin: EdgeInsets.symmetric(vertical: 5),
+                    child: Text(
+                      '인기게시글',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+                    ),
+                  ),
+              ),
               ..._postTitles.map((title) {
                 return InkWell(
                   onTap: () async {
