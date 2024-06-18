@@ -110,24 +110,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             scrollDirection: Axis.horizontal,
                             children: [
                               ClipRRect(
-                                child: Image.asset(
-                                  'v_2.jpg',
+                                child: Image(
+                                  image: AssetImage('v_2.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
                                 ),
                               ),
                               ClipRRect(
-                                child: Image.asset(
-                                  'campus2.jpg',
+                                child: Image(
+                                  image: AssetImage('campus2.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
                                 ),
                               ),
                               ClipRRect(
-                                child: Image.asset(
-                                  'Photo_1.jpg',
+                                child: Image(
+                                  image: AssetImage('Photo_1.jpg'),
                                   width: 300,
                                   height: 200,
                                   fit: BoxFit.cover,
@@ -185,11 +185,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       CustomContainer(
                           iconData: Icons.campaign,
                           text: '학생공지',
-                          url: 'https://www.inhatc.ac.kr/kr/460/subview.do?enc=Zm5jdDF8QEB8JTJGY29tYkJicyUyRmtyJTJGMiUyRmxpc3QuZG8lM0Y%3D'),
+                          url:
+                              'https://www.inhatc.ac.kr/kr/460/subview.do?enc=Zm5jdDF8QEB8JTJGY29tYkJicyUyRmtyJTJGMiUyRmxpc3QuZG8lM0Y%3D'),
                       CustomContainer(
                           iconData: Icons.monitor_sharp,
                           text: '종합정보',
-                          url: 'https://icims.inhatc.ac.kr/intra/sys.Login.doj'),
+                          url: 'https://icims.inhatc.ac.kr/intra/login.jsp'),
                       CustomContainer(
                           iconData: Icons.ondemand_video_rounded,
                           text: '이러닝',
@@ -210,7 +211,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       CustomContainer(
                           iconData: Icons.calendar_month_outlined,
                           text: '학사일정',
-                          url: 'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
+                          url:
+                              'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
                       CustomContainer(
                           iconData: Icons.pin_drop_outlined,
                           text: '학교지도',
@@ -222,11 +224,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       CustomContainer(
                           iconData: Icons.auto_stories,
                           text: '도서관',
-                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
+                          url:
+                              'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
                       CustomContainer(
                           iconData: Icons.directions_bus,
                           text: '셔틀버스',
-                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
+                          url:
+                              'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
                     ],
                   ),
                 ),

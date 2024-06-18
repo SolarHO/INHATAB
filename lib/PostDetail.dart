@@ -342,6 +342,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Consumer<CommentModel>(
               builder: (context, commentModel, child) {
                 return ListView.separated(
+                  physics: NeverScrollableScrollPhysics(), // 스크롤 비활성화
                   shrinkWrap: true,
                   itemCount: commentModel.commentContents.length,
                   itemBuilder: (context, index) {
