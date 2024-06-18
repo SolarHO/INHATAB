@@ -93,13 +93,32 @@ class ProfileModel extends ChangeNotifier {
               String postId = post['postId'];
               DatabaseReference postRef = postsRef.child(postId);
               await postRef.update({'name': newName});
+
+              // 댓글과 대댓글의 작성자명 업데이트
+              DatabaseReference commentsRef = postRef.child('contents').child('comment');
+              DataSnapshot commentsSnapshot = await commentsRef.once().then((event) => event.snapshot);
+              if (commentsSnapshot.value != null) {
+                Map<dynamic, dynamic> comments = commentsSnapshot.value as Map<dynamic, dynamic>;
+                for (var comment in comments.entries) {
+                  if (comment.value['userId'] == userId) {
+                    await commentsRef.child(comment.key).update({'userName': newName});
+                  }
+                  if (comment.value['replies'] != null) {
+                    Map<dynamic, dynamic> replies = comment.value['replies'] as Map<dynamic, dynamic>;
+                    for (var reply in replies.entries) {
+                      if (reply.value['userId'] == userId) {
+                        await commentsRef.child(comment.key).child('replies').child(reply.key).update({'userName': newName});
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
     }
   }
-
   Future<bool> verifyCurrentPassword(String password) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {

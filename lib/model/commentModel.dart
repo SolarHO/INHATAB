@@ -68,6 +68,16 @@ class CommentModel with ChangeNotifier {
     return null;
   }
 
+  Future<String?> _fetchReplyUserName(String userId) async {
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users').child(userId);
+    DataSnapshot snapshot = await userRef.once().then((event) => event.snapshot);
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+      return userData['name'];
+    }
+    return null;
+  }
 
   // 댓글을 불러오는 메서드
   Future<void> fetchComments(String postIds) async {
@@ -108,7 +118,7 @@ class CommentModel with ChangeNotifier {
 
             // 댓글 작성자의 이름을 업데이트된 이름으로 불러오기
             if (!isAnonymous) {
-              userName = await _fetchUserName(userId!);
+              userName = await _fetchUserName(userId!) ?? userName;
             }
 
             // 대댓글 노드가 있는지 확인
@@ -117,25 +127,24 @@ class CommentModel with ChangeNotifier {
 
               if (repliesSnapshot.value != null) {
                 Map<dynamic, dynamic>? repliesData = repliesSnapshot.value as Map<dynamic, dynamic>?;
-                repliesData?.forEach((key, value) {
-                  if(value['anony'] == true) {
-                    replyList.add({
-                      'replyId': key,
-                      'replyContent': value['comment'],
-                      'timestamp': formatTimestamp(value['timestamp']),
-                      'replyuid': value['userId'],
-                      'replyName' : getAnonymousName(value['userId']),
-                    });
-                  } else {
-                    replyList.add({
-                      'replyId': key,
-                      'replyContent': value['comment'],
-                      'timestamp': formatTimestamp(value['timestamp']),
-                      'replyuid': value['userId'],
-                      'replyName' : value['userName'],
-                    });
+                for (var replyEntry in repliesData!.entries) {
+                  String replyId = replyEntry.key;
+                  String replyUserId = replyEntry.value['userId'];
+                  String replyUserName = replyEntry.value['userName'];
+                  bool isReplyAnonymous = replyEntry.value['anony'];
+
+                  if (!isReplyAnonymous) {
+                    replyUserName = await _fetchUserName(replyUserId) ?? replyUserName;
                   }
-                });
+
+                  replyList.add({
+                    'replyId': replyId,
+                    'replyContent': replyEntry.value['comment'],
+                    'timestamp': formatTimestamp(replyEntry.value['timestamp']),
+                    'replyuid': replyUserId,
+                    'replyName': isReplyAnonymous ? getAnonymousName(replyUserId) : replyUserName,
+                  });
+                }
               }
               addComment(commentId!, commentContent!, userId!, timestamp!, userName!, isAnonymous, replyList);
             } else {
