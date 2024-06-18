@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BoardModel with ChangeNotifier {
   String? selectedBoard = ''; //현재 선택한 게시판
+  List<String> saveBoard = []; //글을 작성한 게시판
   List<String> postTitles = []; //게시글 제목
   List<String> postIds = []; //게시글 ID
   List<String> name = []; //작성자 이름
@@ -106,7 +107,7 @@ class BoardModel with ChangeNotifier {
                 int commentCount = postInfo['commentcount'] ?? 0;
 
                 if (title != null && postId != null && username != null) {
-                  addPost(title, postId, username, likeCount, commentCount, timestamp);
+                  addPost(title, boardName ,postId, username, likeCount, commentCount, timestamp);
                 }
               }
             }
@@ -131,12 +132,13 @@ class BoardModel with ChangeNotifier {
             int commentCount = entry.value['commentcount'] ?? 0;
 
             if (title != null && postId != null && username != null) {
-              addPost(title, postId, username, likeCount, commentCount, timestamp);
+              addPost(title, selectedBoard!, postId, username, likeCount, commentCount, timestamp);
             }
           }
         }
       }
     }
+    print(saveBoard);
   } catch (error) {
     print("게시글 정보를 가져오는 데 실패했습니다: $error");
   }
@@ -154,8 +156,9 @@ class BoardModel with ChangeNotifier {
     return null;
   }
 
-  void addPost(String title, String id, String username, int likeCount, int commentCount, String timestamp) { //게시글 추가
+  void addPost(String title, String boardName,String id, String username, int likeCount, int commentCount, String timestamp) { //게시글 추가
     postTitles.add(title);
+    saveBoard.add(boardName);
     postIds.add(id);
     name.add(username);
     likeCounts.add(likeCount);
@@ -168,6 +171,7 @@ class BoardModel with ChangeNotifier {
     int index = postIds.indexOf(postId);
     if(index != -1) {
       postTitles.removeAt(index);
+      saveBoard.remove(index);
       postIds.removeAt(index);
       name.removeAt(index);
       likeCounts.removeAt(index);
@@ -216,6 +220,7 @@ class BoardModel with ChangeNotifier {
   void clear() {
     selectedBoard = null;
     postTitles.clear();
+    saveBoard.clear();
     postIds.clear();
     name.clear();
     likeCounts.clear();

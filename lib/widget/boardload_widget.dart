@@ -7,6 +7,7 @@ import 'package:INHATAB/PostDetail.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../writeboard.dart';
+
 class BoardloadWidget extends StatefulWidget {
   const BoardloadWidget({Key? key}) : super(key: key);
 
@@ -17,7 +18,8 @@ class BoardloadWidget extends StatefulWidget {
 class _BoardloadWidgetState extends State<BoardloadWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final scrollController = ScrollController();
-  final TextEditingController searchController = TextEditingController(); //검색컨트롤러
+  final TextEditingController searchController =
+      TextEditingController(); //검색컨트롤러
 
   @override
   void initState() {
@@ -35,12 +37,14 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
   _scrollListener() async {
     if (scrollController.offset >= scrollController.position.maxScrollExtent &&
         !scrollController.position.outOfRange) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          Provider.of<BoardModel>(context, listen: false).fetchPosts(); // 스크롤이 최하단에 도달하면 게시글 불러오기
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      Provider.of<BoardModel>(context, listen: false)
+          .fetchPosts(); // 스크롤이 최하단에 도달하면 게시글 불러오기
     }
   }
 
-  void showSearchDialog(BuildContext context) { //검색다이어로그
+  void showSearchDialog(BuildContext context) {
+    //검색다이어로그
     showDialog(
       context: context,
       builder: (context) {
@@ -58,7 +62,8 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                 String query = searchController.text.trim();
                 if (query.isNotEmpty) {
                   Provider.of<BoardModel>(context, listen: false).clear();
-                  Provider.of<BoardModel>(context, listen: false).fetchPosts(query: query);
+                  Provider.of<BoardModel>(context, listen: false)
+                      .fetchPosts(query: query);
                 }
                 Navigator.pop(context);
               },
@@ -78,9 +83,6 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
     );
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     return Consumer<BoardModel>(
@@ -97,46 +99,55 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
               title: Text(
                 Provider.of<BoardModel>(context).selectedBoard.toString(),
                 style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  fontFamily: 'Outfit',
-                  color: Colors.white,
-                  fontSize: 22,
-                  letterSpacing: 0,
-                ),
+                      fontFamily: 'Outfit',
+                      color: Colors.white,
+                      fontSize: 22,
+                      letterSpacing: 0,
+                    ),
               ),
               automaticallyImplyLeading: false, // 뒤로가기 버튼 자동 생성 비활성화
-              leading: IconButton( // 왼쪽에 아이콘 추가
-                icon: Icon(Icons.arrow_back, color: Colors.white,), // 뒤로가기 아이콘
+              leading: IconButton(
+                // 왼쪽에 아이콘 추가
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ), // 뒤로가기 아이콘
                 onPressed: () {
                   Provider.of<BoardModel>(context, listen: false).clear();
                   GoRouter.of(context).go('/Bbs'); // 게시판화면으로이동
                 },
               ),
               actions: [
-
-            IconButton(
-            icon: Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              showSearchDialog(context);
-
-            },
-          ),
-                if (Provider.of<BoardModel>(context, listen: false).selectedBoard != '인기게시글')
-                Container(
-                  margin: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.add_rounded, size: 30, color: Colors.white),
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => WriteBoardPage()),
-                      );
+                if (Provider.of<BoardModel>(context, listen: false)
+                        .selectedBoard !=
+                    '인기게시글')
+                  IconButton(
+                    icon: Icon(Icons.search, color: Colors.white),
+                    onPressed: () {
+                      showSearchDialog(context);
                     },
                   ),
-                ),
+                if (Provider.of<BoardModel>(context, listen: false)
+                        .selectedBoard !=
+                    '인기게시글')
+                  Container(
+                    margin: EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.add_rounded,
+                          size: 30, color: Colors.white),
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => WriteBoardPage()),
+                        );
+                      },
+                    ),
+                  ),
               ],
               centerTitle: false,
               elevation: 2,
@@ -160,8 +171,11 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                             child: ListView.separated(
                               controller: scrollController,
                               padding: EdgeInsets.zero,
-                              itemCount: Provider.of<BoardModel>(context).postTitles.length,
-                              separatorBuilder: (context, index) => Divider(color: Colors.grey),
+                              itemCount: Provider.of<BoardModel>(context)
+                                  .postTitles
+                                  .length,
+                              separatorBuilder: (context, index) =>
+                                  Divider(color: Colors.grey),
                               itemBuilder: (context, index) {
                                 return InkWell(
                                   onTap: () {
@@ -169,8 +183,10 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            PostDetailPage(postId: Provider.of<BoardModel>(context).postIds[index]),
+                                        builder: (context) => PostDetailPage(
+                                            postId:
+                                                Provider.of<BoardModel>(context)
+                                                    .postIds[index]),
                                       ),
                                     );
                                   },
@@ -179,30 +195,72 @@ class _BoardloadWidgetState extends State<BoardloadWidget> {
                                         vertical: 10, horizontal: 20),
                                     margin: EdgeInsets.symmetric(vertical: 5),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
+                                        if (Provider.of<BoardModel>(context,
+                                                    listen: false)
+                                                .selectedBoard ==
+                                            '인기게시글')
+                                          Text(
+                                            Provider.of<BoardModel>(context)
+                                                .saveBoard[index],
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.amber),
+                                          ),
                                         Text(
-                                          Provider.of<BoardModel>(context).postTitles[index],
+                                          Provider.of<BoardModel>(context)
+                                              .postTitles[index],
                                           style: TextStyle(fontSize: 16),
                                         ),
                                         SizedBox(height: 4), // 간격 추가
-                                        Row(
-                                          children: [
-                                            Text('${Provider.of<BoardModel>(context).name[index]} ', style: TextStyle(fontSize: 12, color: Colors.black)),
-                                            Text('/ ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                            if (Provider.of<BoardModel>(context).likeCounts[index] > 0) ...[
-                                              Icon(Icons.thumb_up_alt, size: 12, color: Colors.blue),
-                                              Text(': ${Provider.of<BoardModel>(context).likeCounts[index]} ', style: TextStyle(fontSize: 12, color: Colors.blue)),
-                                              Text('/ ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                            ],
-                                            if (Provider.of<BoardModel>(context).commentCounts[index] > 0) ...[
-                                              Icon(Icons.mode_comment_rounded, size: 12, color: Colors.green),
-                                              Text(': ${Provider.of<BoardModel>(context).commentCounts[index]} ', style: TextStyle(fontSize: 12, color: Colors.green)),
-                                              Text('/ ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                            ],
-                                            Text('${Provider.of<BoardModel>(context).timestamps[index]}  ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                          ]
-                                        ),
+                                        Row(children: [
+                                          Text(
+                                              '${Provider.of<BoardModel>(context).name[index]} ',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.black)),
+                                          Text('/ ',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey)),
+                                          if (Provider.of<BoardModel>(context)
+                                                  .likeCounts[index] >
+                                              0) ...[
+                                            Icon(Icons.thumb_up_alt,
+                                                size: 12, color: Colors.blue),
+                                            Text(
+                                                ': ${Provider.of<BoardModel>(context).likeCounts[index]} ',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.blue)),
+                                            Text('/ ',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey)),
+                                          ],
+                                          if (Provider.of<BoardModel>(context)
+                                                  .commentCounts[index] >
+                                              0) ...[
+                                            Icon(Icons.mode_comment_rounded,
+                                                size: 12, color: Colors.green),
+                                            Text(
+                                                ': ${Provider.of<BoardModel>(context).commentCounts[index]} ',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.green)),
+                                            Text('/ ',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey)),
+                                          ],
+                                          Text(
+                                              '${Provider.of<BoardModel>(context).timestamps[index]}  ',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey)),
+                                        ]),
                                       ],
                                     ),
                                   ),

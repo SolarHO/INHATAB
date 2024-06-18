@@ -322,13 +322,10 @@ class _WeatherDisplayWidgetState extends State<WeatherDisplayWidget> {
       // 현재 날씨 데이터 가져오기
       currentWeather =
           await weatherFactory.currentWeatherByLocation(37.4508, 126.6572);
-      print(currentWeather);
       // 3시간 간격으로 날씨 예보 데이터 가져오기
       var fiveDayForecast =
           await weatherFactory.fiveDayForecastByLocation(37.4508, 126.6572);
-      print(fiveDayForecast);
       forecast = fiveDayForecast.take(2).toList();
-      print(forecast);
     } catch (e) {
       print(e);
     } finally {
