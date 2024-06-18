@@ -494,7 +494,7 @@ class _LoginWidgetState extends State<LoginWidget>
                                             context.pushNamed('password-reset'); //비밀번호찾기위젯
                                           },
                                           child: Text(
-                                            'ID/비밀번호 찾기',
+                                            '비밀번호 찾기',
                                             style: FlutterFlowTheme.of(context).bodyMedium.override(
                                               fontFamily: 'Manrope',
                                               letterSpacing: 0,

@@ -191,7 +191,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
           actions: <Widget>[
             Visibility(
               visible: Provider.of<PostModel>(context).writerId !=
-                  Provider.of<userModel>(context).getUid(),
+                  Provider.of<userModel>(context).getUid() &&
+                  writerStatus != 'deleted',
               child: IconButton(
                 icon: Icon(Icons.mail),
                 onPressed: () {
