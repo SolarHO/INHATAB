@@ -199,17 +199,42 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           text: '종합정보',
                           url: 'https://icims.inhatc.ac.kr/intra/sys.Login.doj'),
                       CustomContainer(
-                          iconData: Icons.auto_stories,
-                          text: '도서관',
-                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
-                      CustomContainer(
                           iconData: Icons.ondemand_video_rounded,
                           text: '이러닝',
                           url: 'https://cyber.inhatc.ac.kr/'),
                       CustomContainer(
+                          iconData: Icons.call,
+                          text: '전화번호',
+                          url: 'https://www.inhatc.ac.kr/kr/166/subview.do'),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(5, 10, 5, 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      CustomContainer(
                           iconData: Icons.calendar_month_outlined,
                           text: '학사일정',
                           url: 'https://www.inhatc.ac.kr/kr/123/subview.do?enc=Zm5jdDF8QEB8JTJGc2NoZHVsbWFuYWdlJTJGa3IlMkYzJTJGdmlldy5kbyUzRg%3D%3D'),
+                      CustomContainer(
+                          iconData: Icons.pin_drop_outlined,
+                          text: '학교지도',
+                          url: 'https://www.inhatc.ac.kr/kr/103/subview.do'),
+                      CustomContainer(
+                          iconData: Icons.restaurant,
+                          text: '식당메뉴',
+                          url: 'https://www.inhatc.ac.kr/kr/485/subview.do'),
+                      CustomContainer(
+                          iconData: Icons.auto_stories,
+                          text: '도서관',
+                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
+                      CustomContainer(
+                          iconData: Icons.directions_bus,
+                          text: '셔틀버스',
+                          url: 'https://library.inhatc.ac.kr/Cheetah/INHA/Index/'),
                     ],
                   ),
                 ),
