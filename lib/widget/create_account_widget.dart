@@ -144,7 +144,7 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget>
                 actions: <Widget>[
                   TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        context.go('/login');
                       },
                       child: Text('확인')
                   )
