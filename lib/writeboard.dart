@@ -25,6 +25,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
   String? _fileName; // 파일 이름을 저장할 변수 추가
   int? likecount;
   bool isAnonymous = false;
+  double _uploadProgress = 0; // 업로드 진행 상황
 
   String generateRandomId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -48,7 +49,11 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
 
       // 업로드 진행 상황을 모니터링
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        print('업로드 진행 상황: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%');
+        double progress = (snapshot.bytesTransferred / snapshot.totalBytes);
+
+        setState(() {
+        _uploadProgress = progress; // 진행 상황 업데이트
+        });
       });
 
       // 파일 업로드가 완료되면 다운로드 URL을 반환
@@ -85,6 +90,12 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         String? selectedBoard = prefs.getString('selectedBoard');
         if (selectedBoard == null) {
           throw Exception('게시판을 선택하지 않았습니다.');
+        }
+        if (_titleController.text.isEmpty || _contentController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('제목과 내용을 모두 입력해주세요')),
+          );
+          return;
         }
 
         DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).push();
@@ -174,10 +185,24 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
               ),
             ),
             SizedBox(height: 8.0),
-            if (_fileName != null) // 파일 이름이 있을 경우에만 표시
+            if (_fileName != null)  // 파일 이름이 있을 경우에만 표시
               Text(
                 '선택된 이미지: $_fileName',
                 style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            if (_fileName == null) 
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '선택된 이미지: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '이미지가 업로도 되기까지 시간이 소요될 수 있습니다.',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                  ),
+                ],
               ),
             SizedBox(height: 8.0),
             ElevatedButton(
