@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart'; // Image Picker 패키지 추�
 import 'dart:io';
 
 import 'model/BoardModel.dart';
+
 class WriteBoardPage extends StatefulWidget {
   const WriteBoardPage({Key? key}) : super(key: key);
 
@@ -25,7 +26,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
   String? _fileName; // 파일 이름을 저장할 변수 추가
   int? likecount;
   bool isAnonymous = false;
-  double _uploadProgress = 0; // 업로드 진행 상황
+  String? _selectedImageFilePath; // 선택된 이미지의 파일 경로
 
   String generateRandomId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -34,51 +35,46 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
         8, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
   }
 
-  // 이미지 선택 및 업로드 함수
-  Future<String?> _uploadImage() async {
+  //이미지 선택 함수
+  Future<void> _selectImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery); // 갤러리에서 이미지 선택
 
     if (pickedFile != null) {
-      // 이미지 파일이 선택된 경우에만 실행
-      final String postId = generateRandomId();
-      final String fileName = 'images/$postId.jpg'; // Firebase Storage에 저장될 파일 경로
-
-      final Reference storageRef = FirebaseStorage.instance.ref().child(fileName); // 저장소 참조 생성
-      final UploadTask uploadTask = storageRef.putFile(File(pickedFile.path)); // 파일 업로드
-
-      // 업로드 진행 상황을 모니터링
-      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        double progress = (snapshot.bytesTransferred / snapshot.totalBytes);
-
-        setState(() {
-        _uploadProgress = progress; // 진행 상황 업데이트
-        });
-      });
-
-      // 파일 업로드가 완료되면 다운로드 URL을 반환
-      final TaskSnapshot snapshot = await uploadTask;
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
-
       setState(() {
-        _imageUrl = downloadUrl; // 다운로드 URL 저장
+        _selectedImageFilePath = pickedFile.path; // 파일 경로 저장
         _fileName = pickedFile.path.split('/').last; // 파일 이름 저장
       });
-
-      return downloadUrl; // 다운로드 URL 반환
-    } else {
-      return null; // 이미지 선택이 취소된 경우 null 반환
     }
+  }
+
+  // 이미지 선택 및 업로드 함수
+  Future<String?> _uploadImage(String filePath) async {
+    // 이미지 파일이 선택된 경우에만 실행
+    final String postId = generateRandomId();
+    final String fileName = 'images/$postId.jpg'; // Firebase Storage에 저장될 파일 경로
+
+    final Reference storageRef =
+        FirebaseStorage.instance.ref().child(fileName); // 저장소 참조 생성
+    final UploadTask uploadTask = storageRef.putFile(File(filePath)); // 파일 업로드
+
+    // 파일 업로드가 완료되면 다운로드 URL을 반환
+    final TaskSnapshot snapshot = await uploadTask;
+    final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+    return downloadUrl; // 다운로드 URL 반환
   }
 
   Future<void> _savePost() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
 
-      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
+      DatabaseReference userRef =
+          FirebaseDatabase.instance.reference().child('users');
       DatabaseEvent event = await userRef.child(user!.uid).once();
       DataSnapshot snapshot = event.snapshot;
-      Map<dynamic, dynamic>? userData = snapshot.value as Map<dynamic, dynamic>?;
+      Map<dynamic, dynamic>? userData =
+          snapshot.value as Map<dynamic, dynamic>?;
 
       if (userData != null) {
         String userName = userData['name'];
@@ -98,7 +94,22 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           return;
         }
 
-        DatabaseReference postRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard).push();
+        if (_selectedImageFilePath != null) {
+          _imageUrl = await _uploadImage(_selectedImageFilePath!);
+          if (_imageUrl == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('이미지 업로드에 실패했습니다.')),
+            );
+            return;
+          }
+        }
+
+        DatabaseReference postRef = FirebaseDatabase.instance
+            .reference()
+            .child('boardinfo')
+            .child('boardstat')
+            .child(selectedBoard)
+            .push();
         String postId = postRef.key!;
 
         await postRef.set({
@@ -107,7 +118,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           'uid': user.uid,
           'name': userName,
           'timestamp': timestamp,
-          'anony' : isAnonymous,
+          'anony': isAnonymous,
         });
 
         DatabaseReference contentRef = postRef.child('contents');
@@ -116,7 +127,6 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
           'content': _contentController.text,
           'timestamp': timestamp,
           'imageUrl': _imageUrl, // 이미지 URL 저장
-
         });
 
         // 게시글 저장 후에 결과를 반환하고 이전 페이지로 이동
@@ -174,7 +184,7 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
             ),
             SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: _uploadImage,
+              onPressed: _selectImage,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -185,24 +195,10 @@ class _WriteBoardPageState extends State<WriteBoardPage> {
               ),
             ),
             SizedBox(height: 8.0),
-            if (_fileName != null)  // 파일 이름이 있을 경우에만 표시
+            if (_fileName != null) // 파일 이름이 있을 경우에만 표시
               Text(
                 '선택된 이미지: $_fileName',
                 style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            if (_fileName == null) 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '선택된 이미지: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '이미지가 업로도 되기까지 시간이 소요될 수 있습니다.',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-                  ),
-                ],
               ),
             SizedBox(height: 8.0),
             ElevatedButton(
