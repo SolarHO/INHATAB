@@ -90,23 +90,17 @@ class CommentModel with ChangeNotifier {
       }
       DatabaseReference contentsRef = FirebaseDatabase.instance.reference().child('boardinfo').child('boardstat').child(selectedBoard!).child(postId!);
       DatabaseReference commentsRef = contentsRef.child('contents').child('comment');
-
       // 게시글 작성자 ID를 불러오는 코드 추가
       DataSnapshot writerSnapshot = (await contentsRef.child('uid').once()).snapshot;
       postWriter = writerSnapshot.value as String?;
-
       DataSnapshot commentsSnapshot = (await commentsRef.once()).snapshot;
-
       anonymousCounts.clear(); // 댓글 불러올 때 익명 카운트 초기화
       globalAnonymousCount = 1; // 전역 익명 카운트 초기화
-
       if (commentsSnapshot.value != null) {
         Map<dynamic, dynamic>? comments = commentsSnapshot.value as Map<dynamic, dynamic>?;
-
         if (comments != null) {
           var sortedComments = comments.entries.toList()
             ..sort((a, b) => DateTime.parse(a.value['timestamp']).compareTo(DateTime.parse(b.value['timestamp'])));
-
           for (var entry in sortedComments) {
             String? commentContent = entry.value['comment'];
             String? commentId = entry.key;
@@ -118,33 +112,33 @@ class CommentModel with ChangeNotifier {
 
             // 댓글 작성자의 이름을 업데이트된 이름으로 불러오기
             if (!isAnonymous) {
-              userName = await _fetchUserName(userId!) ?? userName;
+              userName = await _fetchUserName(userId!);
             }
 
             // 대댓글 노드가 있는지 확인
             if (entry.value['replies'] != null) {
               DataSnapshot repliesSnapshot = (await commentsRef.child(commentId!).child('replies').once()).snapshot;
-
               if (repliesSnapshot.value != null) {
                 Map<dynamic, dynamic>? repliesData = repliesSnapshot.value as Map<dynamic, dynamic>?;
-                for (var replyEntry in repliesData!.entries) {
-                  String replyId = replyEntry.key;
-                  String replyUserId = replyEntry.value['userId'];
-                  String replyUserName = replyEntry.value['userName'];
-                  bool isReplyAnonymous = replyEntry.value['anony'];
-
-                  if (!isReplyAnonymous) {
-                    replyUserName = await _fetchUserName(replyUserId) ?? replyUserName;
+                repliesData?.forEach((key, value) {
+                  if(value['anony'] == true) {
+                    replyList.add({
+                      'replyId': key,
+                      'replyContent': value['comment'],
+                      'timestamp': formatTimestamp(value['timestamp']),
+                      'replyuid': value['userId'],
+                      'replyName' : getAnonymousName(value['userId']),
+                    });
+                  } else {
+                    replyList.add({
+                      'replyId': key,
+                      'replyContent': value['comment'],
+                      'timestamp': formatTimestamp(value['timestamp']),
+                      'replyuid': value['userId'],
+                      'replyName' : value['userName'],
+                    });
                   }
-
-                  replyList.add({
-                    'replyId': replyId,
-                    'replyContent': replyEntry.value['comment'],
-                    'timestamp': formatTimestamp(replyEntry.value['timestamp']),
-                    'replyuid': replyUserId,
-                    'replyName': isReplyAnonymous ? getAnonymousName(replyUserId) : replyUserName,
-                  });
-                }
+                });
               }
               addComment(commentId!, commentContent!, userId!, timestamp!, userName!, isAnonymous, replyList);
             } else {
